@@ -1,0 +1,41 @@
+﻿<*S_DE_PR_DE_RL_DE_CV*>,S(\.|\.? )DE P(\.|\.? )R(\.|\.? )DE R(\.|\.? )L(\.|\.? )DE C(\.|\.? )V\.?
+<*S_DE_RL_DE_CV*>,S(\.|\.? )DE R(\.|\.? )L(\.|\.? )DE C(\.|\.? )V\.?
+<*SPR_DE_RL_DE_CV*>,S(\.|\.? )P(\.|\.? )R(\.|\.? )DE R(\.|\.? )L(\.|\.? )DE C(\.|\.? )V\.?
+<*SPR_DE_RL*>,S(\.|\.? )P(\.|\.? )R(\.|\.? )DE R(\.|\.? )L\.?
+<*SC_DE_RL_DE_CV*>,S(\.|\.? )C(\.|\.? )DE R(\.|\.? )L(\.|\.? )DE C(\.|\.? )V\.?
+<*OBSHCHESTVO_S_OGRANICHENNOI_OTVETSTVENNOSTYU*>,OBSH?CH?ESTVO S OGRANICHER?NNOI OTVET?STVENNOSTYU
+<*ZAKRYTOE_AKTSIONERNOE_OBSHCHESTVO*>,ZAKRYTOE AKTSIONERNOE OBSHCH?ESTVO
+<*OTKRYTOE_AKTSIONERNOE_OBSHCHESTVO*>,OTKRYTOE AKTSIONERNOE OBSHCHE?STVO
+<*PUBLICHNOE_AKTSIONERNOE_OBSHCHESTVO*>,OTKRYTOE AKTSIONERNOE OBSHCH?ESTVO
+<*AKTSIONERNOE_OBSHCHESTVO*>,AKTSIONERNOE OBSHCH?ESTVO
+<*OPEN_JSC*>,OPEN JOINT(-| )STOCK COMPANY,OPEN JSC
+<*PUBLIC_JSC*>,PUBLIC JOINT(-| )STOCK COMPANY
+<*CLOSED_JSC*>,CLOSED JOINT(-| )STOCK COMPANY
+<*JVC*>,JOINT VENTURE COMPANY
+<*SA_DE_CV*>,SA.? DE CV.?,S A DE C V,S\.A\.? DE C\.V\.?,S\. A\.? DE C\. V\.?,,"	S.A. de C.V."
+<*CO_LTD*>,"CO(\.,? ?|, ?| )LTD\.?","COMPANY(, ?| )LIMITED","COMPANY(, ?| )LTD\.?",,"		Co., Ltd."
+<*PVT_LTD*>,"PVT(\.,? ?|, ?| )LTD\.?","PRIVATE(, ?| )LIMITED",,"	Pvt., Ltd."
+<*CORP*>,CORP\.?,CORPORATION,,"										Corp."
+<*PJSC*>,PJSC\.?,P J S C,P\.J\.S\.C\.?,P\. J\. S\. C\.?,,"			PJSC"
+<*OJSC*>,OJSC\.?,O J S C,O\.J\.S\.C\.?,O\. J\. S\. C\.?,,"			OJSC"
+<*GMBH*>,GMBH\.?,G M B H,G\.M\.B\.H\.?,G\. M\. B\. H\.?,,"			GmbH"
+<*TRS*>,TRS\.?,T R S,T\.R\.S\.?,T\. R\. S\.?,,"						T.R.S."
+<*SAE*>,SAE\.?,S A E,S\.A\.E\.?,S\. A\. E\.?,,"						S.A.E."
+<*SRL*>,SRL\.?,S R L,S\.R\.L\.?,S\. R\. L\.?,,"						S.R.L."
+<*SRO*>,SRO\.?,S R O,S\.R\.O\.?,S\. R\. O\.?,,"						S.R.O."
+<*SPA*>,SPA\.?,S P A,S\.P\.A\.?,S\. P\. A\.?,,"						S.p.A."
+<*DOO*>,DOO\.?,D O O,D\.O\.O\.?,D\. O\. O\.?,,"						d.o.o."
+<*JSC*>,JSC\.?,J S C,J\.S\.C\.?,J\. S\. C\.?,JOINT STOCK COMPANY
+<*LLC*>,LLC\.?,L L C,L\.L\.C\.?,L\. L\. C\.?,LIMITED LIABIRITY COMPANY,,"LLC"
+<*LLC*>,OOO\.?,O O O,O\.O\.O\.?,O\. O\. O\.?,,"						OOO (→LLC)"
+<*LLC*>,OAO\.?,O A O,O\.A\.O\.?,O\. A\. O\.?,,"						OAO (→LLC)"
+<*LLC*>,PAO\.?,P A O,P\.A\.O\.?,P\. A\. O\.?,,"						PAO (→LLC)"
+<*LTD*>,LTD\.?,LIMITED,,"											Ltd.?"
+<*INC*>,INC\.?,INCORPORATED,,"										Inc.?"
+<*AO*>,AO\.?,A O,A\.O\.?,A\. O\.?,,"								AO"
+<*BV*>,BV\.?,B V,B\.V\.?,B\. V\.?,,"								B.V."
+<*KK*>,KK\.?,K K,K\.K\.?,K\. K\.?,,"								K.K."
+<*PT*>,PT\.?,P T,P\.T\.?,P\. T\.?,,"								P.T."
+<*SA*>,SA\.?,S A,S\.A\.?,S\. A\.?,,"								S.A."
+<*SV*>,SV\.?,S V,S\.V\.?,S\. V\.?,,"								S.V."
+<*CO*>,CO\.?,COMPANY,,"												Co."

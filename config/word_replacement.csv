@@ -1,0 +1,44 @@
+﻿$1$2$3$4$5$6$7$8$9,(?:(\p{L}) )(?:(\p{L}) )?(?:(\p{L}) )?(?:(\p{L}) )?(?:(\p{L}) )?(?:(\p{L}) )?(?:(\p{L}) )?(?:(\p{L}))((?: \p{L})*),,"					('U S A')"
+$1$2$3$4$5$6$7$8$9,(?:(\p{L})\.)(?:(\p{L})\.)?(?:(\p{L})\.)?(?:(\p{L})\.)?(?:(\p{L})\.)?(?:(\p{L})\.)?(?:(\p{L})\.)?(?:(\p{L}))((?:\.\p{L})*)\.?,,"			('U.S.A', 'U.S.A.')"
+$1$2$3$4$5$6$7$8$9,(?:(\p{L})\. )(?:(\p{L})\. )?(?:(\p{L})\. )?(?:(\p{L})\. )?(?:(\p{L})\. )?(?:(\p{L})\. )?(?:(\p{L})\. )?(?:(\p{L}))((?:\. \p{L})*)\.?,,"	('U. S. A', 'U. S. A.')"
+
+$1,<\*(.+)\*>
+
+NO.,#
+AND,&
+AT,@
+
+1,ONE,FIRST,1ST,I
+2,TWO,SECOND,2ND,II
+3,THREE,THIRD,3RD,III
+4,FOUR,FOURTH,4TH,IIII,IV
+5,FIVE,FIFTH,5TH,V
+6,SIX,SIXTH,6TH,VI
+7,SEVEN,SEVENTH,7TH,VII
+8,EIGHT,EIGHTH,8TH,VIII
+9,NINE,NINETH,9TH,VIIII,IX
+10,TEN,TENTH,10TH,X
+
+DEPT.,DEPARTMENT
+DIV.,DIVISION
+GOVT.,GOV\.,GOVERNMENT
+BLDG.,BUILDING
+UNIV.,UNIVERSITY,UNIVERSITYS
+JR.,JUNIOR,JR
+MR.,MISTER
+MRS.,MISTRESS
+MS.,MISS,MS
+DR.,DOCTOR,DR
+NO.,NUMBER,NO
+
+HSIEN,HSEIN
+ALEKSANDER,OLEKSANDR,ALEXANDER
+ALEKSEI,ALEKSEY,ALEXEY,OLEKSIY
+DENIS,DENYS,DENIZ
+MOZGOVOY,MOZGOVOI,MOZGOVY,MOZHOVY,MOZHOVYY,MOZGOVII
+NIKOLAY,NIKOLAI,MYKOLA
+PETR,PYOTR,
+SERGEY,SERGEI,SERHIY
+VASYL,VASILY,VASILIY,VASILI,VASILII
+
+ZTE,ZHONGXING

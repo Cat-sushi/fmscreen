@@ -1,0 +1,14 @@
+﻿termMatchingMinLetterRatio,0.6666
+termMatchingMinLetters,3
+termPartialMatchingMinLetterRatio,0.2
+termPartialMatchingMinLetters,2
+queryMatchingMinTermRatio,0.5
+queryMatchingMinTerms,1
+queryMatchingTypicalProperNounDf,10
+queryMatchingMinTermOrderSimilarity,0.625
+scoreIdfMagnifier,2.0
+fallbackThresholdCombinations,1048576
+fallbackMaxQueryTerms,6
+fallbackMaxQueryTermMobility,6
+queryMatchingTermOrderCoefficent,0.5
+queryResultCacheSize,100000
