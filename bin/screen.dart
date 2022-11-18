@@ -1,0 +1,137 @@
+// Fuzzy text matcher for entity/ persn screening.
+// Copyright (c) 2022, Yako.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:args/args.dart';
+import 'package:json2yaml/json2yaml.dart';
+// import 'package:yaml_writer/yaml_writer.dart'; // many cr
+// import 'package:fhir_yaml/fhir_yaml.dart' as fhir; // no top list, no cr
+// import 'package:yaml_modify/yaml_modify.dart'; // no top list, no cr
+
+late IOSink resultSink;
+late IOSink logSink;
+late DateTime startTime;
+late DateTime currentLap;
+late DateTime lastLap;
+
+var bulkSize = 100;
+var lc = 0;
+var cacheHits = 0;
+var cacheHits2 = 0;
+
+void main(List<String> args) async {
+  var argParser = ArgParser()
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
+    ..addFlag('cache',
+        abbr: 'c', negatable: true, defaultsTo: true, help: 'activate cache')
+    ..addFlag('data',
+        abbr: 'd', negatable: false, help: 'fetch data with ItemId')
+    ..addFlag('verbose', abbr: 'v', negatable: true, help: 'print item data')
+    ..addOption('formatter',
+        abbr: 'f', defaultsTo: 'yaml', valueHelp: 'fomatter');
+  ArgResults options;
+  try {
+    options = argParser.parse(args);
+  } catch (e) {
+    print(argParser.usage);
+    exit(1);
+  }
+  if (options['help'] == true) {
+    print(argParser.usage);
+    exit(0);
+  }
+
+  var cache = options['cache'] as bool;
+  var data = options['data'] as bool;
+  var verbose = options['verbose'] as bool;
+  var formtter = options['formatter'] as String;
+  var queries = options.rest;
+
+  var httpClient = HttpClient();
+
+  if (queries.isEmpty) {
+    print(argParser.usage);
+    exit(1);
+  }
+
+  var queryJsonString = jsonEncode(queries);
+
+  dynamic jsonString;
+  if (data) {
+    if (queries.length != 1) {
+      print(argParser.usage);
+      exit(1);
+    }
+    var queryEncoded = Uri.encodeComponent(queries[0]);
+    var path = '/data/$queryEncoded';
+    var request = await httpClient.get('localhost', 8080, path);
+    var response = await request.close();
+    if (response.statusCode == 408) {
+      print('Session timed out.');
+      exit(1);
+    }
+    jsonString = await response.transform(utf8.decoder).join();
+  } else if (queries.length == 1) {
+    var queryEncoded = Uri.encodeComponent(queries[0]);
+    var path = '?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}&q=$queryEncoded';
+    var request = await httpClient.get('localhost', 8080, path);
+    var response = await request.close();
+    jsonString = await response.transform(utf8.decoder).join();
+  } else {
+    var path = '?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}';
+    var request = await httpClient.post('localhost', 8080, path);
+    request.headers.contentType =
+        ContentType('application', 'json', charset: 'utf-8');
+    request.write(queryJsonString);
+    var response = await request.close();
+    jsonString = await response.transform(utf8.decoder).join();
+  }
+  httpClient.close();
+
+  var jsonObject = jsonDecode(jsonString);
+
+  String formatted;
+  switch (formtter) {
+    case 'json':
+      var jsonDecoderIndent = JsonEncoder.withIndent('  ');
+      formatted = jsonDecoderIndent.convert(jsonObject);
+      break;
+    case 'yaml': // no top list
+      formatted = myJson2yaml(jsonObject);
+      break;
+    default:
+      print(argParser.usage);
+      exit(1);
+  }
+
+  print(formatted);
+}
+
+String myJson2yaml(dynamic jsonObject) {
+  if (jsonObject is Map) {
+    return json2yaml(jsonObject.cast<String, dynamic>()).trimRight();
+  }
+  var sb = StringBuffer();
+  for (var r in jsonObject) {
+    if (r != jsonObject.first) {
+      sb.writeln();
+    }
+    sb.write(json2yaml(r.cast<String, dynamic>()));
+  }
+  return sb.toString().trimRight();
+}
