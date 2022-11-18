@@ -30,7 +30,7 @@ final mutex = Mutex();
 // Configure routes.
 final _router = Router()
   ..get('/', _singleHandler)
-  ..get('/data/<dlItemId>', _dataHandler)
+  ..get('/data/<itemId>', _dataHandler)
   ..post('/', _multiHandler)
   ..get('/restart', _restartHandler);
 
@@ -49,8 +49,16 @@ Future<Response> _singleHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
+  var initialized = screener.isInitialized;
+  late Completer completer;
+  if (!initialized) {
+    completer = await mutex.get();
+  }
   var screeningResult =
       await screener.screen(q, verbose: vervose, cache: cache);
+  if (!initialized) {
+    completer.complete();
+  }
   var jsonObject = screeningResult.toJson();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -70,19 +78,27 @@ Future<Response> _multiHandler(Request request) async {
   }
   var queriesJsonString = await request.readAsString();
   var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
-  await mutex.get();
+  var comleter = await mutex.get();
   var screeningResults =
       await screener.screenb(queries, cache: cache, verbose: vervose);
-  mutex.free();
+  comleter.complete();
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
 
-Response _dataHandler(Request request) {
-  final dlItemId = request.params['dlItemId']!;
-  var data = screener.itemData(dlItemId);
+Future<Response> _dataHandler(Request request) async {
+  final itemId = Uri.decodeComponent(request.params['itemId']!);
+  var initialized = screener.isInitialized;
+  late Completer completer;
+  if (!initialized) {
+    completer = await mutex.get();
+  }
+  var data = screener.itemData(itemId);
+  if (!initialized) {
+    completer.complete();
+  }
   if (data == null) {
     return Response(408, body: 'session timed out');
   }
@@ -92,11 +108,12 @@ Response _dataHandler(Request request) {
 }
 
 Future<Response> _restartHandler(Request request) async {
-  await mutex.get();
+  var mutex2 = mutex;
+  var completer = await mutex2.get();
   await screener.stopServers();
   screener = Screener();
   await screener.init();
-  mutex.free();
+  completer.complete();
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
 

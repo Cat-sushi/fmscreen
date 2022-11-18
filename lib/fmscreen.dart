@@ -65,6 +65,7 @@ class Screener {
   final _itemId2Data = _Item2Data();
   late final FMatcher _fmatcher;
   late final FMatcherP _fmatcherp;
+  bool _initialized = false;
 
   Future<void> init() async {
     _fmatcher = FMatcher();
@@ -74,7 +75,10 @@ class Screener {
     await _fmatcherp.startServers();
     await _entry2ItemId.readCsv('database/list.csv');
     _itemId2Data.readJson('database/id2data.json');
+    _initialized = true;
   }
+
+  get isInitialized => _initialized;
 
   /// This stops the internal servers.
   ///
