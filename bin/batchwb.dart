@@ -93,7 +93,7 @@ Future<void> wbatch(String queryPath) async {
   await resultSink.close();
 }
 
-Future<void> outputResults(Iterable<ScreeningResult> results) async {
+void outputResults(Iterable<ScreeningResult> results) {
   for (var result in results) {
     ++lc;
     if (result.queryStatus.terms.isEmpty) {
