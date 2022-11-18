@@ -31,7 +31,7 @@ class ItemId {
     return _canonicalized[id] = ItemId._(id);
   }
   factory ItemId._fromExternalId(String id) {
-    var id2 = '$id\$${Object.hashAll([id, _databaseVersion])}';
+    var id2 = '$id\$$_databaseVersion';
     return ItemId._canonicalize(id2);
   }
   int get length => id.length;
@@ -49,31 +49,31 @@ class DetectedItem implements Comparable {
   late final ItemId itemId;
 
   /// sorted by score
-  final List<MatchedEntry> matchedEntries;
+  final List<MatchedEntry> matchedNames;
 
   final Map<String, dynamic>? data;
 
-  DetectedItem(this.itemId, this.matchedEntries, this.data);
+  DetectedItem(this.itemId, this.matchedNames, this.data);
 
   @override
   int compareTo(dynamic other) {
-    var r = -matchedEntries[0].score.compareTo(other.matchedEntries[0].score);
+    var r = -matchedNames[0].score.compareTo(other.matchedNames[0].score);
     if (r != 0) {
       return r;
     }
-    r = matchedEntries[0]
+    r = matchedNames[0]
         .entry
         .length
-        .compareTo(other.matchedEntries[0].entry.length);
+        .compareTo(other.matchedNames[0].entry.length);
     if (r != 0) {
       return r;
     }
-    return matchedEntries[0].entry.compareTo(other.matchedEntries[0].entry);
+    return matchedNames[0].entry.compareTo(other.matchedNames[0].entry);
   }
 
   DetectedItem.fromJson(dynamic json)
       : itemId = ItemId._canonicalize(json['itemId']),
-        matchedEntries = json['matchedEntries']
+        matchedNames = json['matchedNames']
             .map<MatchedEntry>((e) => MatchedEntry.fromJson(e))
             .toList(),
         data = json['data'];
@@ -81,7 +81,7 @@ class DetectedItem implements Comparable {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'itemId': itemId,
-      'matchedEntries': matchedEntries.map((e) => e.toJson()).toList(),
+      'matchedNames': matchedNames.map((e) => e.toJson()).toList(),
       if (data != null) 'data': data
     };
   }
@@ -98,6 +98,7 @@ class QueryStatus {
   final bool perfectMatching;
   final double queryScore;
   final bool queryFallenBack;
+  final String databaseVersion;
   final String message;
   QueryStatus.fromQueryResult(QueryResult result)
       : serverId = result.serverId,
@@ -110,6 +111,9 @@ class QueryStatus {
         perfectMatching = result.cachedResult.cachedQuery.perfectMatching,
         queryScore = result.cachedResult.queryScore,
         queryFallenBack = result.cachedResult.queryFallenBack,
+        databaseVersion = DateTime.fromMillisecondsSinceEpoch(_databaseVersion)
+            .toUtc()
+            .toIso8601String(),
         message = result.message;
   QueryStatus.fromJson(Map<String, dynamic> json)
       : serverId = json['serverId'],
@@ -122,6 +126,7 @@ class QueryStatus {
         perfectMatching = json['perfectMatching'] == 'true' ? true : false,
         queryScore = json['queryScore'],
         queryFallenBack = json['queryFallenBack'] == 'true' ? true : false,
+        databaseVersion = json['databaseVersion'],
         message = json['message'];
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -135,6 +140,7 @@ class QueryStatus {
       'perfectMatching': perfectMatching,
       'queryScore': queryScore,
       'queryFallenBack': queryFallenBack,
+      'databaseVersion': databaseVersion,
       'message': message
     };
   }

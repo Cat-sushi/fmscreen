@@ -50,13 +50,13 @@ String formatOutput(int ix, ScreeningResult result) {
     if (result.queryStatus.queryScore == 0) {
       csvLine.write('0.00');
     } else {
-      csvLine.write((e.matchedEntries[0].score / result.queryStatus.queryScore)
+      csvLine.write((e.matchedNames[0].score / result.queryStatus.queryScore)
           .toStringAsFixed(2));
     }
     csvLine.write(r',');
     csvLine.write(result.queryStatus.queryScore.toStringAsFixed(2));
     csvLine.write(r',');
-    if (result.detectedItems[0].matchedEntries[0].entry.string == '') {
+    if (result.detectedItems[0].matchedNames[0].entry.string == '') {
       csvLine.write('0');
     } else {
       csvLine.write(result.detectedItems.length);
@@ -64,7 +64,7 @@ String formatOutput(int ix, ScreeningResult result) {
     csvLine.write(r',');
     csvLine.write(quoteCsvCell(result.queryStatus.rawQuery));
     csvLine.write(r',');
-    csvLine.write(quoteCsvCell(e.matchedEntries[0].entry.string));
+    csvLine.write(quoteCsvCell(e.matchedNames[0].entry.string));
     csvLine.write(r',');
     csvLine.write(result.queryStatus.letType.name);
     for (var e in result.queryStatus.terms) {
