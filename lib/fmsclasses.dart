@@ -31,7 +31,7 @@ class ItemId {
     return _canonicalized[id] = ItemId._(id);
   }
   factory ItemId._fromExternalId(String id) {
-    var id2 = '$id\$$_databaseVersion';
+    var id2 = '$id@$_databaseVersion';
     return ItemId._canonicalize(id2);
   }
   int get length => id.length;
