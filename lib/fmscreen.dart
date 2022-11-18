@@ -16,6 +16,7 @@
 
 library fmscreen;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -44,6 +45,7 @@ class _Entry2ItemId {
 
 class _Item2Data {
   final _map = <ItemId, ItemData>{};
+
   void readJson(String path) {
     var jsonString = File(path).readAsStringSync();
     var json = jsonDecode(jsonString) as List<dynamic>;
@@ -67,20 +69,43 @@ class Screener {
   Future<void> init() async {
     _fmatcher = FMatcher();
     await _fmatcher.init();
+    _databaseVersion = _fmatcher.databaseVersion;
     _fmatcherp = FMatcherP.fromFMatcher(_fmatcher);
     await _fmatcherp.startServers();
     await _entry2ItemId.readCsv('database/list.csv');
     _itemId2Data.readJson('database/id2data.json');
   }
 
-  Future<void> stopServers() async {
-    await _fmatcherp.stopServers();
+  /// This stops the internal servers.
+  ///
+  /// Usage
+  /// ```dart
+  /// late Screener screener;
+  /// final mutex = Mutex();
+  /// ```
+  /// ```dart
+  /// screener = Screener();
+  /// await screener.init();
+  /// ```
+  /// ```dart
+  /// var mutex = await screener.stopServers();
+  /// screener = Screener();
+  /// await screener.init();
+  /// mutex.free();
+  /// ```
+  /// ```dart
+  /// await mutex.get();
+  /// result = screener.screen(['abc', 'def']);
+  /// mutex.free();
+  /// ```
+  Future<void> stopServers() {
+    return _fmatcherp.stopServers();
   }
 
   Future<ScreeningResult> screen(String query,
       {bool cache = true, bool verbose = false}) async {
     var queryResults = await _fmatcherp.fmatch(query, cache);
-    var screeningResult = _detectItem(queryResults, verbose);
+    var screeningResult = _detectItems(queryResults, verbose);
     return screeningResult;
   }
 
@@ -89,32 +114,32 @@ class Screener {
     var queryResults = await _fmatcherp.fmatchb(queries, cache);
     var screeningResults = <ScreeningResult>[];
     for (var queryResult in queryResults) {
-      screeningResults.add(_detectItem(queryResult, verbose));
+      screeningResults.add(_detectItems(queryResult, verbose));
     }
     return screeningResults;
   }
 
-  ScreeningResult _detectItem(QueryResult queryResult, bool verbose) {
-    var dlItemIdMap = <ItemId, List<MatchedEntry>>{};
+  ScreeningResult _detectItems(QueryResult queryResult, bool verbose) {
+    var itemIdMap = <ItemId, List<MatchedEntry>>{};
     for (var matchedEntry in queryResult.cachedResult.matchedEntiries) {
-      var dlItemId = _entry2ItemId[matchedEntry.entry]!;
-      if (dlItemIdMap[dlItemId] == null) {
-        dlItemIdMap[dlItemId] = [];
+      var itemId = _entry2ItemId[matchedEntry.entry]!;
+      if (itemIdMap[itemId] == null) {
+        itemIdMap[itemId] = [];
       }
-      dlItemIdMap[dlItemId]!.add(matchedEntry);
+      itemIdMap[itemId]!.add(matchedEntry);
     }
-    var matchedDlItemIds = <DetectedItem>[];
-    for (var e in dlItemIdMap.entries) {
+    var matchedItems = <DetectedItem>[];
+    for (var e in itemIdMap.entries) {
       dynamic data;
       if (verbose) {
         data = _itemId2Data[e.key];
       }
       var detctedItem = DetectedItem(e.key, e.value, data);
-      matchedDlItemIds.add(detctedItem);
+      matchedItems.add(detctedItem);
     }
-    matchedDlItemIds.sort();
-    var queryProperties = QueryStatus.fromQueryResult(queryResult);
-    var ret = ScreeningResult(queryProperties, matchedDlItemIds);
+    matchedItems.sort();
+    var queryStatus = QueryStatus.fromQueryResult(queryResult);
+    var ret = ScreeningResult(queryStatus, matchedItems);
     return ret;
   }
 
