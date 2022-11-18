@@ -263,6 +263,7 @@ Future<void> extFul() async {
       row['Also Known As'] = l[3]!;
     }
     row['Type of WMD'] = l[4]!;
+    row['source'] = 'Foreigh Users List - METI Japan';
     var rowJson = <String, dynamic>{'id': id, 'data': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {

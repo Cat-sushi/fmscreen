@@ -14,15 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fmatch/fmatch.dart';
 import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 late Screener screener;
+final mutex = Mutex();
 
 // Configure routes.
 final _router = Router()
@@ -67,8 +70,10 @@ Future<Response> _multiHandler(Request request) async {
   }
   var queriesJsonString = await request.readAsString();
   var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
+  await mutex.get();
   var screeningResults =
       await screener.screenb(queries, cache: cache, verbose: vervose);
+  mutex.free();
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -87,10 +92,11 @@ Response _dataHandler(Request request) {
 }
 
 Future<Response> _restartHandler(Request request) async {
+  await mutex.get();
   await screener.stopServers();
   screener = Screener();
   await screener.init();
-
+  mutex.free();
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
 
