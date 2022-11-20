@@ -49,16 +49,10 @@ Future<Response> _singleHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
-  var initialized = screener.isInitialized;
-  late Completer completer;
-  if (!initialized) {
-    completer = await mutex.get();
-  }
+  await mutex.lockShared();
   var screeningResult =
       await screener.screen(q, verbose: vervose, cache: cache);
-  if (!initialized) {
-    completer.complete();
-  }
+  mutex.unlockShared();
   var jsonObject = screeningResult.toJson();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -78,10 +72,10 @@ Future<Response> _multiHandler(Request request) async {
   }
   var queriesJsonString = await request.readAsString();
   var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
-  var comleter = await mutex.get();
+  await mutex.lockShared();
   var screeningResults =
       await screener.screenb(queries, cache: cache, verbose: vervose);
-  comleter.complete();
+  mutex.unlockShared();
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -90,15 +84,9 @@ Future<Response> _multiHandler(Request request) async {
 
 Future<Response> _dataHandler(Request request) async {
   final itemId = Uri.decodeComponent(request.params['itemId']!);
-  var initialized = screener.isInitialized;
-  late Completer completer;
-  if (!initialized) {
-    completer = await mutex.get();
-  }
+  await mutex.lockShared();
   var data = screener.itemData(itemId);
-  if (!initialized) {
-    completer.complete();
-  }
+  mutex.unlockShared();
   if (data == null) {
     return Response(408, body: 'session timed out');
   }
@@ -108,12 +96,11 @@ Future<Response> _dataHandler(Request request) async {
 }
 
 Future<Response> _restartHandler(Request request) async {
-  var mutex2 = mutex;
-  var completer = await mutex2.get();
+  await mutex.lock();
   await screener.stopServers();
   screener = Screener();
   await screener.init();
-  completer.complete();
+  mutex.unlock();
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
 
