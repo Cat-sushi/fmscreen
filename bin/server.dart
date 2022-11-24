@@ -51,10 +51,10 @@ Future<Response> _singleHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
-  await mutex.lockShared();
-  var screeningResult =
-      await screener.screen(q, verbose: vervose, cache: cache);
-  mutex.unlockShared();
+  late ScreeningResult screeningResult;
+  await mutex.criticalShared(() async {
+    screeningResult = await screener.screen(q, verbose: vervose, cache: cache);
+  });
   var jsonObject = screeningResult.toJson();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -74,10 +74,11 @@ Future<Response> _multiHandler(Request request) async {
   }
   var queriesJsonString = await request.readAsString();
   var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
-  await mutex.lockShared();
-  var screeningResults =
-      await screener.screenb(queries, cache: cache, verbose: vervose);
-  mutex.unlockShared();
+  late List<ScreeningResult> screeningResults;
+  await mutex.criticalShared(() async {
+    screeningResults =
+        await screener.screenb(queries, cache: cache, verbose: vervose);
+  });
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -86,9 +87,10 @@ Future<Response> _multiHandler(Request request) async {
 
 Future<Response> _dataHandler(Request request) async {
   final itemId = Uri.decodeComponent(request.params['itemId']!);
-  await mutex.lockShared();
-  var data = screener.itemData(itemId);
-  mutex.unlockShared();
+  ItemData? data;
+  await mutex.criticalShared(() async {
+    data = screener.itemData(itemId);
+  });
   if (data == null) {
     return Response(408, body: 'session timed out');
   }
@@ -111,11 +113,11 @@ Future<Response> _normalizeHandler(Request request) async {
 }
 
 Future<Response> _restartHandler(Request request) async {
-  await mutex.lock();
-  await screener.stopServers();
-  screener = Screener();
-  await screener.init();
-  mutex.unlock();
+  await mutex.critical(() async {
+    await screener.stopServers();
+    screener = Screener();
+    await screener.init();
+  });
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
 
