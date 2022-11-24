@@ -23,6 +23,7 @@ import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:simple_mutex/simple_mutex.dart';
 
 late Screener screener;
 final mutex = Mutex();
@@ -30,8 +31,9 @@ final mutex = Mutex();
 // Configure routes.
 final _router = Router()
   ..get('/', _singleHandler)
-  ..get('/data/<itemId>', _dataHandler)
   ..post('/', _multiHandler)
+  ..get('/data/<itemId>', _dataHandler)
+  ..get('/normalize', _normalizeHandler)
   ..get('/restart', _restartHandler);
 
 Future<Response> _singleHandler(Request request) async {
@@ -91,6 +93,19 @@ Future<Response> _dataHandler(Request request) async {
     return Response(408, body: 'session timed out');
   }
   var jsonString = jsonEncode(data);
+  return Response.ok(jsonString,
+      headers: {'content-type': 'application/json; charset=utf-8'});
+}
+
+Future<Response> _normalizeHandler(Request request) async {
+  var q = request.requestedUri.queryParameters['q'];
+  if (q == null) {
+    return Response.badRequest();
+  }
+  await mutex.lockShared();
+  var normalizingResult = normalize(q);
+  mutex.unlockShared();
+  var jsonString = jsonEncode(normalizingResult);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
