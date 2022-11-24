@@ -37,13 +37,15 @@ var cacheHits2 = 0;
 void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
-    ..addFlag('cache',
-        abbr: 'c', negatable: true, defaultsTo: true, help: 'activate cache')
+    ..addFlag('cache', abbr: 'c', negatable: false, help: 'activate cache')
     ..addFlag('data',
         abbr: 'd', negatable: false, help: 'fetch data with ItemId')
-    ..addFlag('verbose', abbr: 'v', negatable: true, help: 'print item data')
+    ..addFlag('verbose', abbr: 'v', negatable: false, help: 'print item data')
     ..addOption('formatter',
-        abbr: 'f', defaultsTo: 'yaml', valueHelp: 'fomatter');
+        abbr: 'f', defaultsTo: 'yaml', valueHelp: 'fomatter')
+    ..addFlag('normalize',
+        abbr: 'n', negatable: false, help: 'normalize string')
+    ..addFlag('restart', negatable: false, help: 'restart server');
   ArgResults options;
   try {
     options = argParser.parse(args);
@@ -60,14 +62,11 @@ void main(List<String> args) async {
   var data = options['data'] as bool;
   var verbose = options['verbose'] as bool;
   var formtter = options['formatter'] as String;
+  var normalize = options['normalize'] as bool;
+  var restart = options['restart'] as bool;
   var queries = options.rest;
 
   var httpClient = HttpClient();
-
-  if (queries.isEmpty) {
-    print(argParser.usage);
-    exit(1);
-  }
 
   var queryJsonString = jsonEncode(queries);
 
@@ -86,6 +85,35 @@ void main(List<String> args) async {
       exit(1);
     }
     jsonString = await response.transform(utf8.decoder).join();
+  } else if (normalize) {
+    if (queries.length != 1) {
+      print(argParser.usage);
+      exit(1);
+    }
+    var queryEncoded = Uri.encodeComponent(queries[0]);
+    var path = '/normalize?q=$queryEncoded';
+    var request = await httpClient.get('localhost', 8080, path);
+    var response = await request.close();
+    jsonString = await response.transform(utf8.decoder).join();
+    var normalized = jsonDecode(jsonString);
+    print(normalized);
+    exit(0);
+  } else if (restart) {
+    if (queries.isNotEmpty) {
+      print(argParser.usage);
+      exit(1);
+    }
+    var path = '/restart';
+    var request = await httpClient.get('localhost', 8080, path);
+    var response = await request.close();
+    var responseString = await response.transform(utf8.decoder).join();
+    print(responseString);
+    httpClient.close();
+    exit(0);
+  } else if (queries.isEmpty) {
+    print(argParser.usage);
+    httpClient.close();
+    exit(1);
   } else if (queries.length == 1) {
     var queryEncoded = Uri.encodeComponent(queries[0]);
     var path = '?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}&q=$queryEncoded';
