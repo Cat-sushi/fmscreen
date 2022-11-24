@@ -28,19 +28,28 @@ part 'fmsclasses.dart';
 
 int _databaseVersion = 0;
 
-class _Entry2ItemId {
-  final _map = <Entry, ItemId>{};
+class _Entry2ItemIds {
+  final _map = <Entry, List<ItemId>>{};
   Future<void> readCsv(String path) async {
     await for (var l in readCsvLines(path)) {
-      if (l.length < 2 || l[0] == null || l[1] == null) {
+      if (l.length < 2) {
         continue;
       }
-      _map[Entry(l[0]!)] = ItemId._fromExternalId(l[1]!);
+      var name = l[0];
+      var itemId = l[1];
+      if (name == null || itemId == null) {
+        continue;
+      }
+      var entry = Entry(name);
+      if (_map[entry] == null) {
+        _map[entry] = [];
+      }
+      _map[entry]!.add(ItemId._fromExternalId(itemId));
     }
   }
 
-  ItemId? operator [](Entry entry) => _map[entry];
-  operator []=(Entry entry, ItemId id) => _map[entry] = id;
+  List<ItemId>? operator [](Entry entry) => _map[entry];
+  operator []=(Entry entry, List<ItemId> ids) => _map[entry] = ids;
 }
 
 class _Item2Data {
@@ -61,7 +70,7 @@ class _Item2Data {
 }
 
 class Screener {
-  final _entry2ItemId = _Entry2ItemId();
+  final _entry2ItemIds = _Entry2ItemIds();
   final _itemId2Data = _Item2Data();
   late final FMatcher _fmatcher;
   late final FMatcherP _fmatcherp;
@@ -72,21 +81,25 @@ class Screener {
     _databaseVersion = _fmatcher.databaseVersion;
     _fmatcherp = FMatcherP.fromFMatcher(_fmatcher);
     await _fmatcherp.startServers();
-    await _entry2ItemId.readCsv('database/list.csv');
+    await _entry2ItemIds.readCsv('database/list.csv');
     _itemId2Data.readJson('database/id2data.json');
   }
 
-  /// This stops the internal servers.
+  /// This stops the internal servers for restarting internal servers.
   ///
   /// Usage
+  ///
+  /// Declearation.
   /// ```dart
   /// late Screener screener;
   /// final mutex = Mutex();
   /// ```
+  /// Initialization. (starting the internal servers.)
   /// ```dart
   /// screener = Screener();
   /// await screener.init();
   /// ```
+  /// Restarting the internal servers.
   /// ```dart
   /// await mutex.lock();
   /// screener.stopServers();
@@ -94,6 +107,7 @@ class Screener {
   /// await screener.init();
   /// mutex.unlock();
   /// ```
+  /// Screening. (Asynchronous, Bulk)
   /// ```dart
   /// await mutex.lockShared();
   /// result = screener.screenb(['abc', 'def']);
@@ -121,26 +135,28 @@ class Screener {
   }
 
   ScreeningResult _detectItems(QueryResult queryResult, bool verbose) {
-    var itemIdMap = <ItemId, List<MatchedEntry>>{};
+    var itemId2Entries = <ItemId, List<MatchedEntry>>{};
     for (var matchedEntry in queryResult.cachedResult.matchedEntiries) {
-      var itemId = _entry2ItemId[matchedEntry.entry]!;
-      if (itemIdMap[itemId] == null) {
-        itemIdMap[itemId] = [];
+      var itemIds = _entry2ItemIds[matchedEntry.entry]!;
+      for (var itemId in itemIds) {
+        if (itemId2Entries[itemId] == null) {
+          itemId2Entries[itemId] = [];
+        }
+        itemId2Entries[itemId]!.add(matchedEntry);
       }
-      itemIdMap[itemId]!.add(matchedEntry);
     }
-    var matchedItems = <DetectedItem>[];
-    for (var e in itemIdMap.entries) {
+    var detectedItems = <DetectedItem>[];
+    for (var e in itemId2Entries.entries) {
       dynamic data;
       if (verbose) {
         data = _itemId2Data[e.key];
       }
-      var detctedItem = DetectedItem(e.key, e.value, data);
-      matchedItems.add(detctedItem);
+      var detectedItem = DetectedItem(e.key, e.value, data);
+      detectedItems.add(detectedItem);
     }
-    matchedItems.sort();
+    detectedItems.sort();
     var queryStatus = QueryStatus.fromQueryResult(queryResult);
-    var ret = ScreeningResult(queryStatus, matchedItems);
+    var ret = ScreeningResult(queryStatus, detectedItems);
     return ret;
   }
 
