@@ -96,9 +96,7 @@ Future<Response> _normalizeHandler(Request request) async {
   if (q == null) {
     return Response.badRequest();
   }
-  await mutex.lockShared();
-  var normalizingResult = normalize(q);
-  mutex.unlockShared();
+  var normalizingResult = await mutex.criticalShared(() => normalize(q));
   var jsonString = jsonEncode(normalizingResult);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
@@ -107,10 +105,11 @@ Future<Response> _normalizeHandler(Request request) async {
 Future<Response> _restartHandler(Request request) async {
   var newScreener = Screener();
   await newScreener.init();
-  await mutex.critical(() async {
-    await screener.stopServers();
+  var oldScreener = screener;
+  await mutex.critical(() {
     screener = newScreener;
   });
+  await oldScreener.stopServers();
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
 
