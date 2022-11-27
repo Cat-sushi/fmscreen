@@ -51,10 +51,8 @@ Future<Response> _singleHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
-  late ScreeningResult screeningResult;
-  await mutex.criticalShared(() async {
-    screeningResult = await screener.screen(q, verbose: vervose, cache: cache);
-  });
+  var screeningResult = await mutex
+      .criticalShared(() => screener.screen(q, verbose: vervose, cache: cache));
   var jsonObject = screeningResult.toJson();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -74,11 +72,8 @@ Future<Response> _multiHandler(Request request) async {
   }
   var queriesJsonString = await request.readAsString();
   var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
-  late List<ScreeningResult> screeningResults;
-  await mutex.criticalShared(() async {
-    screeningResults =
-        await screener.screenb(queries, cache: cache, verbose: vervose);
-  });
+  var screeningResults = await mutex.criticalShared(
+      () => screener.screenb(queries, cache: cache, verbose: vervose));
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -87,10 +82,7 @@ Future<Response> _multiHandler(Request request) async {
 
 Future<Response> _dataHandler(Request request) async {
   final itemId = Uri.decodeComponent(request.params['itemId']!);
-  ItemData? data;
-  await mutex.criticalShared(() async {
-    data = screener.itemData(itemId);
-  });
+  var data = await mutex.criticalShared(() => screener.itemData(itemId));
   if (data == null) {
     return Response(408, body: 'session timed out');
   }
@@ -113,10 +105,11 @@ Future<Response> _normalizeHandler(Request request) async {
 }
 
 Future<Response> _restartHandler(Request request) async {
+  var newScreener = Screener();
+  await newScreener.init();
   await mutex.critical(() async {
     await screener.stopServers();
-    screener = Screener();
-    await screener.init();
+    screener = newScreener;
   });
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
