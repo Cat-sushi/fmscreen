@@ -39,7 +39,7 @@ final _router = Router()
 Future<Response> _singleHandler(Request request) async {
   var q = request.requestedUri.queryParameters['q'];
   if (q == null) {
-    return Response.badRequest();
+    return Response.badRequest(body: 'Query is not specified');
   }
   var v = request.requestedUri.queryParameters['v'];
   var vervose = false;
@@ -70,8 +70,18 @@ Future<Response> _multiHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
-  var queriesJsonString = await request.readAsString();
-  var queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
+  String queriesJsonString;
+  try {
+    queriesJsonString = await request.readAsString();
+  } catch (e) {
+    return Response.badRequest(body: 'Posted data is not a string');
+  }
+  var queries = <String>[];
+  try {
+    queries = (jsonDecode(queriesJsonString) as List<dynamic>).cast<String>();
+  } catch (e) {
+    return Response.badRequest(body: 'Posted data is not a JSON string list');
+  }
   var screeningResults = await mutex.criticalShared(
       () => screener.screenb(queries, cache: cache, verbose: vervose));
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
@@ -94,9 +104,9 @@ Future<Response> _dataHandler(Request request) async {
 Future<Response> _normalizeHandler(Request request) async {
   var q = request.requestedUri.queryParameters['q'];
   if (q == null) {
-    return Response.badRequest();
+    return Response.badRequest(body: 'Query is not sepecified');
   }
-  var normalizingResult = await mutex.criticalShared(() => normalize(q));
+  var normalizingResult = normalize(q);
   var jsonString = jsonEncode(normalizingResult);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
@@ -106,9 +116,7 @@ Future<Response> _restartHandler(Request request) async {
   var newScreener = Screener();
   await newScreener.init();
   var oldScreener = screener;
-  await mutex.critical(() {
-    screener = newScreener;
-  });
+  await mutex.critical(() => screener = newScreener);
   await oldScreener.stopServers();
   return Response.ok('Server restartd: ${DateTime.now()}\n');
 }
