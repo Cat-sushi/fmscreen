@@ -90,9 +90,9 @@ Future<Response> _multiHandler(Request request) async {
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
 
-Future<Response> _dataHandler(Request request) async {
+Response _dataHandler(Request request) {
   final itemId = Uri.decodeComponent(request.params['itemId']!);
-  var data = await mutex.criticalShared(() => screener.itemData(itemId));
+  var data = screener.itemData(itemId);
   if (data == null) {
     return Response(408, body: 'session timed out');
   }
@@ -101,7 +101,7 @@ Future<Response> _dataHandler(Request request) async {
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
 
-Future<Response> _normalizeHandler(Request request) async {
+Response _normalizeHandler(Request request) {
   var q = request.requestedUri.queryParameters['q'];
   if (q == null) {
     return Response.badRequest(body: 'Query is not sepecified');
