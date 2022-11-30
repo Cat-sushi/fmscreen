@@ -18,10 +18,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:highlight/highlight.dart';
 import 'package:json2yaml/json2yaml.dart';
-// import 'package:yaml_writer/yaml_writer.dart'; // many cr
-// import 'package:fhir_yaml/fhir_yaml.dart' as fhir; // no top list, no cr
-// import 'package:yaml_modify/yaml_modify.dart'; // no top list, no cr
 
 late IOSink resultSink;
 late IOSink logSink;
@@ -139,8 +137,23 @@ void main(List<String> args) async {
       var jsonDecoderIndent = JsonEncoder.withIndent('  ');
       formatted = jsonDecoderIndent.convert(jsonObject);
       break;
-    case 'yaml': // no top list
+    case 'yaml':
       formatted = myJson2yaml(jsonObject);
+      break;
+    case 'md':
+      var yaml = myJson2yaml(jsonObject);
+      formatted = '```yaml\n$yaml\n```';
+      break;
+    case 'html':
+      var yaml = myJson2yaml(jsonObject);
+      var highlighted = highlight.parse(yaml, language: 'yaml');
+      var html = highlighted.toHtml();
+      var regExp = RegExp(r'(https?://[\w/:%#\$&\?\(\)~\.=\+\-]+)');
+      var clickable = html.replaceAllMapped(regExp,
+          (m) => '<a href="${m.group(1)}" target="_blank">${m.group(1)}</a>');
+      formatted =
+          '<html><head><style type="text/css">span.hljs-attr {color:blue;}'
+          '</style></head><body><pre>$clickable</pre></body></html>';
       break;
     default:
       print(argParser.usage);
