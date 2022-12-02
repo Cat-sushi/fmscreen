@@ -1,5 +1,5 @@
 name: fmscreen
-description: A Fuzzy matching screenig engine against denial lists such as BIS Entity List.
+description: A screening server for entity/ person name against denial lists such as BIS Entity List.
 version: 1.0.0
 # homepage: https://www.example.com
 
@@ -9,9 +9,7 @@ environment:
 dependencies:
   args: ^2.0.0
   async: ^2.10.0
-  fmatch:
-    git: https://github.com/Cat-sushi/fmatch.git
-    # path: /home/katsushi/development/dart/fmatch
+  fmatch: ^1.0.0
   highlight: ^0.7.0
   html: ^0.15.1
   json2yaml: ^3.0.0

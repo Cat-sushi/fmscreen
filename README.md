@@ -9,7 +9,7 @@ A screening server for entity/ person name against denial lists such as BIS Enti
 - Fuzzy term matching using Levenshtein distance.
 - Divided query terms matching with single list term.
 - Fuzzy query matching respecting term similarity, term order, and term importance of IDF.
-- Perfect matching mode deactivating fuzzy matchings for reducing false positives in some cases.
+- Perfect matching mode disabling fuzzy matchings for reducing false positives in some cases.
 - Accepting Latin characters, Chinese characters, Katakana characters, and others.
 - Canonicalaization of traditioanal and simplified Chinese characters, and others.<br>
 This makes matching insensitive to character simplification.
@@ -19,7 +19,7 @@ This makes matching insensitive to spelling variants of legal entity types.
 - Results cache for time performance.
 - Solo query accepted by the web server for interactive UIs.
 - Bulk queries accepted and processed parallel by the web server for batch applicaions.
-- Text normalizing API for outer larger systems joining results with the denial lists.
+- Text normalizing API to get the global identifier of a neme.
 - Aggregates/ spreads matched names to itmes of denial lists.
 - And others.
 
@@ -194,7 +194,7 @@ $ dart bin/screen -n 'abc'
 ABC
 ```
 
-Note that matched names from this subsystem are normalized in the same way.
+Note that matched names from this server are normalized in the same way.
 
 ## License
 

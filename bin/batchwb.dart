@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -87,15 +88,16 @@ Future<void> wbatch(String queryPath) async {
         .map<ScreeningResult>(
             (dynamic e) => ScreeningResult.fromJson(e as Map<String, dynamic>))
         .toList();
-    outputResults(results);
+    unawaited(outputResults(results));
   }
   httpClient.close();
   await logSink.close();
   await resultSink.close();
 }
 
-void outputResults(Iterable<ScreeningResult> results) {
+Future<void> outputResults(Iterable<ScreeningResult> results) async {
   for (var result in results) {
+    await null;
     ++lc;
     if (result.queryStatus.terms.isEmpty) {
       logSink.writeln(result.queryStatus.message);

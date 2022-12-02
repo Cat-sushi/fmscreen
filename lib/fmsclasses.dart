@@ -17,7 +17,7 @@
 part of fmscreen;
 
 /// Internal ID of a item of the denial lists.
-/// 
+///
 /// This is concatanated with the DB version.
 class ItemId {
   static final _canonicalized = <String, ItemId>{};
@@ -47,9 +47,10 @@ class DetectedItem implements Comparable {
   late final ItemId itemId;
 
   /// Matched names with score.
-  /// 
+  ///
   /// sorted by score
   final List<MatchedEntry> matchedNames;
+
   /// The body of the detected item in JSON
   final Map<String, dynamic>? body;
 
@@ -91,25 +92,35 @@ class DetectedItem implements Comparable {
 class QueryStatus {
   /// The ID of the sever `Isolate` used for fuzzy matching.
   final int serverId;
+
   /// The [DateTime] of starting fuzzy matching.
   final DateTime start;
+
   /// The duration in milli seconds of fuzzy matching.
   final int durationInMilliseconds;
   final String inputString;
+
   /// The normalized name for screening.
   final String rawQuery;
+
   /// Legal entity type position, Postfix/ prefix/ none
   final LetType letType;
+
   /// The terms of the preprocessd name.
   final List<Term> terms;
+
   /// True, if the query is specified for perfect matching.
   final bool perfectMatching;
+
   /// The discernment of the query.
   final double queryScore;
+
   /// True, if the query terms are reduced for perfomance reasons.
   final bool queryFallenBack;
+
   /// The [DateTime] when the database created.
   final String databaseVersion;
+
   /// The message from the fuzzy matcher.
   final String message;
   QueryStatus.fromQueryResult(QueryResult result)
