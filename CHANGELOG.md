@@ -3,3 +3,11 @@
 ## 1.0.0
 
 - Initial version.
+
+## 1.0.1
+
+- fix typo.
+
+## 1.0.2
+
+- Make homepage reachable.
