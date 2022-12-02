@@ -36,9 +36,9 @@ void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
     ..addFlag('cache', abbr: 'c', negatable: false, help: 'activate cache')
-    ..addFlag('data',
-        abbr: 'd', negatable: false, help: 'fetch data with ItemId')
-    ..addFlag('verbose', abbr: 'v', negatable: false, help: 'print item data')
+    ..addFlag('body',
+        abbr: 'b', negatable: false, help: 'fetch item body with ItemId')
+    ..addFlag('verbose', abbr: 'v', negatable: false, help: 'print item body')
     ..addOption('formatter',
         abbr: 'f', defaultsTo: 'yaml', valueHelp: 'fomatter')
     ..addFlag('normalize',
@@ -57,7 +57,7 @@ void main(List<String> args) async {
   }
 
   var cache = options['cache'] as bool;
-  var data = options['data'] as bool;
+  var body = options['body'] as bool;
   var verbose = options['verbose'] as bool;
   var formtter = options['formatter'] as String;
   var normalize = options['normalize'] as bool;
@@ -69,13 +69,13 @@ void main(List<String> args) async {
   var queryJsonString = jsonEncode(queries);
 
   dynamic jsonString;
-  if (data) {
+  if (body) {
     if (queries.length != 1) {
       print(argParser.usage);
       exit(1);
     }
     var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/data/$queryEncoded';
+    var path = '/body/$queryEncoded';
     var request = await httpClient.get('localhost', 8080, path);
     var response = await request.close();
     if (response.statusCode == 408) {

@@ -39,7 +39,7 @@ final fulCsv = '$pls/ful.csv';
 
 final concatList = '$pls/list.csv';
 late final IOSink outSinkCsv;
-final concatId2Data = '$pls/id2data.json';
+final concatId2Body = '$pls/id2body.json';
 late final IOSink outSinkJson;
 var first = true;
 
@@ -69,7 +69,7 @@ Future<void> main(List<String> args) async {
   }
 
   outSinkCsv = File(concatList).openWrite()..add(utf8Bom);
-  outSinkJson = File(concatId2Data).openWrite()..writeln('[');
+  outSinkJson = File(concatId2Body).openWrite()..writeln('[');
 
   print("Extracting entries from consolidated list.");
   var start = DateTime.now();
@@ -122,7 +122,7 @@ Future<void> extConsolidated() async {
     var id = 'CONS$ix';
     var row = surpressNullAndEmptyPropertiesFromJson(r as Map<String, dynamic>)
         as Map<String, Object>;
-    var rowJson = <String, dynamic>{'id': id, 'data': row};
+    var rowJson = <String, dynamic>{'id': id, 'body': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {
       first = false;
@@ -265,7 +265,7 @@ Future<void> extFul() async {
     row['Type of WMD'] = l[4]!;
     row['source'] =
         'Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry (METI), Japan -';
-    var rowJson = <String, dynamic>{'id': id, 'data': row};
+    var rowJson = <String, dynamic>{'id': id, 'body': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {
       first = false;

@@ -23,16 +23,14 @@ import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'package:simple_mutex/simple_mutex.dart';
 
 late Screener screener;
-final mutex = Mutex();
 
 // Configure routes.
 final _router = Router()
   ..get('/', _singleHandler)
   ..post('/', _multiHandler)
-  ..get('/data/<itemId>', _dataHandler)
+  ..get('/body/<itemId>', _bodyHandler)
   ..get('/normalize', _normalizeHandler)
   ..get('/restart', _restartHandler);
 
@@ -51,8 +49,8 @@ Future<Response> _singleHandler(Request request) async {
   if (c != null && c == '0') {
     cache = false;
   }
-  var screeningResult = await mutex
-      .criticalShared(() => screener.screen(q, verbose: vervose, cache: cache));
+  var screeningResult =
+      await screener.screen(q, verbose: vervose, cache: cache);
   var jsonObject = screeningResult.toJson();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
@@ -82,21 +80,21 @@ Future<Response> _multiHandler(Request request) async {
   } catch (e) {
     return Response.badRequest(body: 'Posted data is not a JSON string list');
   }
-  var screeningResults = await mutex.criticalShared(
-      () => screener.screenb(queries, cache: cache, verbose: vervose));
+  var screeningResults =
+      await screener.screenb(queries, cache: cache, verbose: vervose);
   var jsonObject = screeningResults.map((e) => e.toJson()).toList();
   var jsonString = jsonEncode(jsonObject);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
 
-Response _dataHandler(Request request) {
+Response _bodyHandler(Request request) {
   final itemId = Uri.decodeComponent(request.params['itemId']!);
-  var data = screener.itemData(itemId);
-  if (data == null) {
+  var body = screener.itemBody(itemId);
+  if (body == null) {
     return Response(408, body: 'session timed out');
   }
-  var jsonString = jsonEncode(data);
+  var jsonString = jsonEncode(body);
   return Response.ok(jsonString,
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
@@ -113,12 +111,13 @@ Response _normalizeHandler(Request request) {
 }
 
 Future<Response> _restartHandler(Request request) async {
-  var newScreener = Screener();
+  print('Restarting servers');
+  var newScreener = Screener(true);
   await newScreener.init();
   var oldScreener = screener;
-  await mutex.critical(() => screener = newScreener);
-  await oldScreener.stopServers();
-  return Response.ok('Server restartd: ${DateTime.now()}\n');
+  screener = newScreener;
+  oldScreener.stopServers();
+  return Response.ok('Servers restartd: ${DateTime.now()}\n');
 }
 
 void main(List<String> args) async {
@@ -128,7 +127,7 @@ void main(List<String> args) async {
   // Configure a pipeline that logs requests.
   final handler = Pipeline().addMiddleware(logRequests()).addHandler(_router);
 
-  screener = Screener();
+  screener = Screener(true);
   await screener.init();
 
   // For running in containers, we respect the PORT environment variable.

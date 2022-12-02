@@ -16,23 +16,22 @@
 
 part of fmscreen;
 
-// This is concatanated with the hashCode of DB version and it self.
+/// Internal ID of a item of the denial lists.
+/// 
+/// This is concatanated with the DB version.
 class ItemId {
   static final _canonicalized = <String, ItemId>{};
   final String id;
   static const dummy = ItemId._('');
 
   const ItemId._(this.id);
-  factory ItemId._canonicalize(String id) {
+  factory ItemId._fromExternalId(String eid) {
+    var id = '$eid@$_databaseVersion';
     var ret = _canonicalized[id];
     if (ret != null) {
       return ret;
     }
     return _canonicalized[id] = ItemId._(id);
-  }
-  factory ItemId._fromExternalId(String id) {
-    var id2 = '$id@$_databaseVersion';
-    return ItemId._canonicalize(id2);
   }
   int get length => id.length;
   String toJson() => id;
@@ -42,18 +41,19 @@ class ItemId {
   operator ==(Object other) => id == (other as ItemId).id;
 }
 
-typedef ItemData = Map<String, dynamic>;
-
-/// Query matched Denial List.
+/// A detected item of the denial lists.
 class DetectedItem implements Comparable {
+  /// The internal item ID.
   late final ItemId itemId;
 
+  /// Matched names with score.
+  /// 
   /// sorted by score
   final List<MatchedEntry> matchedNames;
+  /// The body of the detected item in JSON
+  final Map<String, dynamic>? body;
 
-  final Map<String, dynamic>? data;
-
-  DetectedItem(this.itemId, this.matchedNames, this.data);
+  DetectedItem(this.itemId, this.matchedNames, this.body);
 
   @override
   int compareTo(dynamic other) {
@@ -72,33 +72,45 @@ class DetectedItem implements Comparable {
   }
 
   DetectedItem.fromJson(dynamic json)
-      : itemId = ItemId._canonicalize(json['itemId']),
+      : itemId = ItemId._(json['itemId']),
         matchedNames = json['matchedNames']
             .map<MatchedEntry>((e) => MatchedEntry.fromJson(e))
             .toList(),
-        data = json['data'];
+        body = json['body'];
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'itemId': itemId,
       'matchedNames': matchedNames.map((e) => e.toJson()).toList(),
-      if (data != null) 'data': data
+      if (body != null) 'body': body
     };
   }
 }
 
+/// Status of the query for screening.
 class QueryStatus {
+  /// The ID of the sever `Isolate` used for fuzzy matching.
   final int serverId;
+  /// The [DateTime] of starting fuzzy matching.
   final DateTime start;
+  /// The duration in milli seconds of fuzzy matching.
   final int durationInMilliseconds;
   final String inputString;
+  /// The normalized name for screening.
   final String rawQuery;
+  /// Legal entity type position, Postfix/ prefix/ none
   final LetType letType;
+  /// The terms of the preprocessd name.
   final List<Term> terms;
+  /// True, if the query is specified for perfect matching.
   final bool perfectMatching;
+  /// The discernment of the query.
   final double queryScore;
+  /// True, if the query terms are reduced for perfomance reasons.
   final bool queryFallenBack;
+  /// The [DateTime] when the database created.
   final String databaseVersion;
+  /// The message from the fuzzy matcher.
   final String message;
   QueryStatus.fromQueryResult(QueryResult result)
       : serverId = result.serverId,
@@ -146,6 +158,7 @@ class QueryStatus {
   }
 }
 
+/// The result of screening
 class ScreeningResult {
   final QueryStatus queryStatus;
   final List<DetectedItem> detectedItems;

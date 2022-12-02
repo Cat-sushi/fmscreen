@@ -21,6 +21,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fmatch/fmatch.dart';
+import 'package:simple_mutex/simple_mutex.dart';
 
 import 'src/util.dart';
 
@@ -36,15 +37,15 @@ class _Entry2ItemIds {
         continue;
       }
       var name = l[0];
-      var itemId = l[1];
-      if (name == null || itemId == null) {
+      var externItemId = l[1];
+      if (name == null || externItemId == null) {
         continue;
       }
       var entry = Entry(name);
       if (_map[entry] == null) {
         _map[entry] = [];
       }
-      _map[entry]!.add(ItemId._fromExternalId(itemId));
+      _map[entry]!.add(ItemId._fromExternalId(externItemId));
     }
   }
 
@@ -52,29 +53,37 @@ class _Entry2ItemIds {
   operator []=(Entry entry, List<ItemId> ids) => _map[entry] = ids;
 }
 
-class _Item2Data {
-  final _map = <ItemId, ItemData>{};
+class _Item2Body {
+  final _map = <ItemId, Map<String, dynamic>>{};
 
   void readJson(String path) {
     var jsonString = File(path).readAsStringSync();
     var json = jsonDecode(jsonString) as List<dynamic>;
     for (var e in json) {
-      var id = (e as Map<String, dynamic>)['id']! as String;
-      var data = e['data']! as Map<String, dynamic>;
-      _map[ItemId._fromExternalId(id)] = data;
+      var eid = (e as Map<String, dynamic>)['id']! as String;
+      var body = e['body']! as Map<String, dynamic>;
+      _map[ItemId._fromExternalId(eid)] = body;
     }
   }
 
-  ItemData? operator [](ItemId id) => _map[id];
-  operator []=(ItemId id, Map<String, dynamic> data) => _map[id] = data;
+  Map<String, dynamic>? operator [](ItemId id) => _map[id];
+  operator []=(ItemId id, Map<String, dynamic> body) => _map[id] = body;
 }
 
+/// The screening engine.
 class Screener {
+  /// If youu will [stopServers] asynchronously, pass [mutex] `true`.
+  Screener([bool mutex = false]) : _mutex = mutex ? Mutex() : null;
+
+  final Mutex? _mutex;
   final _entry2ItemIds = _Entry2ItemIds();
-  final _itemId2Data = _Item2Data();
+  final _itemId2Body = _Item2Body();
   late final FMatcher _fmatcher;
   late final FMatcherP _fmatcherp;
 
+  /// Initialize this screener.
+  ///
+  /// Call and `await` this before use this screener.
   Future<void> init() async {
     _fmatcher = FMatcher();
     await _fmatcher.init();
@@ -82,55 +91,45 @@ class Screener {
     _fmatcherp = FMatcherP.fromFMatcher(_fmatcher);
     await _fmatcherp.startServers();
     await _entry2ItemIds.readCsv('database/list.csv');
-    _itemId2Data.readJson('database/id2data.json');
+    _itemId2Body.readJson('database/id2body.json');
   }
 
-  /// This stops the internal servers for restarting internal servers.
-  ///
-  /// Usage
-  ///
-  /// Declearation.
-  /// ```dart
-  /// late Screener screener;
-  /// final mutex = Mutex();
-  /// ```
-  /// Initialization. (starting the internal servers.)
-  /// ```dart
-  /// screener = Screener();
-  /// await screener.init();
-  /// ```
-  /// Restarting the internal servers.
-  /// ```dart
-  /// await mutex.lock();
-  /// screener.stopServers();
-  /// screener = Screener();
-  /// await screener.init();
-  /// mutex.unlock();
-  /// ```
-  /// Screening. (Asynchronous, Bulk)
-  /// ```dart
-  /// await mutex.lockShared();
-  /// result = screener.screenb(['abc', 'def']);
-  /// mutex.unlockShared();
-  /// ```
-  Future<void> stopServers() {
-    return _fmatcherp.stopServers();
+  /// This stops the internal server `Isolate`s.
+  void stopServers() {
+    if (_mutex == null) {
+      _fmatcherp.stopServers(); // unawaited
+      return;
+    }
+    _mutex!.critical(_fmatcherp.stopServers); // unawaited
   }
 
+  /// Do screening.
+  ///
+  /// If you need item body, pass [verbose] `true`.
+  ///
+  /// If you temporarily want to disable result cache, pass [cache] `false`.
   Future<ScreeningResult> screen(String query,
       {bool cache = true, bool verbose = false}) async {
-    var queryResults = await _fmatcherp.fmatch(query, cache);
+    var queryResults = _mutex == null
+        ? await _fmatcherp.fmatch(query, cache)
+        : await _mutex!.criticalShared(() => _fmatcherp.fmatch(query, cache));
     var screeningResult = _detectItems(queryResults, verbose);
     return screeningResult;
   }
 
+  /// Do screening of multiple names.
+  ///
+  /// If you need item body, pass [verbose] `true`.
+  ///
+  /// If you temporarily want to disable result cache, pass [cache] `false`.
   Future<List<ScreeningResult>> screenb(List<String> queries,
       {bool cache = true, bool verbose = false}) async {
-    var queryResults = await _fmatcherp.fmatchb(queries, cache);
-    var screeningResults = <ScreeningResult>[];
-    for (var queryResult in queryResults) {
-      screeningResults.add(_detectItems(queryResult, verbose));
-    }
+    var queryResults = _mutex == null
+        ? await _fmatcherp.fmatchb(queries, cache)
+        : await _mutex!
+            .criticalShared(() => _fmatcherp.fmatchb(queries, cache));
+    var screeningResults = List.generate(
+        queryResults.length, (i) => _detectItems(queryResults[i], verbose));
     return screeningResults;
   }
 
@@ -147,11 +146,11 @@ class Screener {
     }
     var detectedItems = <DetectedItem>[];
     for (var e in itemId2Entries.entries) {
-      dynamic data;
+      dynamic body;
       if (verbose) {
-        data = _itemId2Data[e.key];
+        body = _itemId2Body[e.key];
       }
-      var detectedItem = DetectedItem(e.key, e.value, data);
+      var detectedItem = DetectedItem(e.key, e.value, body);
       detectedItems.add(detectedItem);
     }
     detectedItems.sort();
@@ -160,7 +159,8 @@ class Screener {
     return ret;
   }
 
-  ItemData? itemData(String itemId) {
-    return _itemId2Data[ItemId._canonicalize(itemId)];
+  /// Get the body of the itemId which is string representation of [ItemId].
+  Map<String, dynamic>? itemBody(String itemId) {
+    return _itemId2Body[ItemId._(itemId)];
   }
 }
