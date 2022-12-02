@@ -50,7 +50,7 @@ bin/server
 ### Screen a name with verbose option
 
 ```console
-$ dart bin/screen -v '888'
+$ dart bin/screen.dart -v '888'
 queryStatus:
   serverId: 3
   start: 2022-12-02T07:11:27.794243Z
@@ -98,7 +98,7 @@ detectedItems:
 Enclose the whole query with double quates.
 
 ```console
-$ dart bin/screen '"abc"' '"def"'
+$ dart bin/screen.dart '"abc"' '"def"'
 queryStatus:
   serverId: 0
   start: 2022-12-02T07:15:11.241759Z
@@ -147,7 +147,7 @@ detectedItems:
 ### Get the body with a internal item ID
 
 ```console
-$ dart bin/screen -b CONS3520@1669930772000
+$ dart bin/screen.dart -b CONS3520@1669930772000
 source: Nonproliferation Sanctions (ISN) - State Department
 programs:
   - E.O. 13382
@@ -181,7 +181,7 @@ queries_results.csv
 ### Reflesh the server
 
 ```text
-dart bin/screen --restart
+dart bin/screen.dart --restart
 ```
 
 This makes the server reload the database, reread the configurations and the settings, and purge the result chache.
@@ -190,7 +190,7 @@ This is useful when the denial lists are updated or the configurations/ settings
 ### Get normalized text as the global identifier of a name
 
 ```console
-$ dart bin/screen -n 'abc'
+$ dart bin/screen.dart -n 'abc'
 ABC
 ```
 
