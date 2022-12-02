@@ -180,7 +180,7 @@ queries_results.csv
 
 ### Reflesh the server
 
-```text
+```console
 dart bin/screen --restart
 ```
 
@@ -189,7 +189,7 @@ This is useful when the denial lists are updated or the configurations/ settings
 
 ### Get normalized text as the global identifier of a name
 
-```text
+```console
 $ dart bin/screen -n 'abc'
 ABC
 ```
