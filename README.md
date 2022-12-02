@@ -43,7 +43,7 @@ dart compile exe -v bin/server.dart -o bin/server
 
 ### Start the web server
 
-```console
+```text
 bin/server
 ```
 
@@ -180,7 +180,7 @@ queries_results.csv
 
 ### Reflesh the server
 
-```console
+```text
 dart bin/screen --restart
 ```
 
