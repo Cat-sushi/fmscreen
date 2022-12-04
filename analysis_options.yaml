@@ -17,8 +17,8 @@ include: package:lints/recommended.yaml
 
 linter:
   rules:
+    - unawaited_futures
 #     - camel_case_types
-  - unawaited_futures
 
 # analyzer:
 #   exclude:

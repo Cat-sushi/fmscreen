@@ -108,6 +108,8 @@ Future<void> fetchConsolidated() async {
   }
 }
 
+final regExpSource = RegExp(r'^.*\(([^)]+)\).*');
+
 Future<void> extConsolidated() async {
   final jsonString = File(consolidatedJson).readAsStringSync();
   final jsonObject = jsonDecode(jsonString) as Map<String, dynamic>;
@@ -122,6 +124,11 @@ Future<void> extConsolidated() async {
     var id = 'CONS$ix';
     var row = surpressNullAndEmptyPropertiesFromJson(r as Map<String, dynamic>)
         as Map<String, Object>;
+    var listCode = row['source'] as String;
+    listCode = listCode.replaceFirstMapped(regExpSource, (m) => m[1]!);
+    if (listCode == 'NS-MBS List') {
+      listCode = 'MBS';
+    }
     var rowJson = <String, dynamic>{'id': id, 'body': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {
@@ -136,6 +143,8 @@ Future<void> extConsolidated() async {
       ..write(quoteCsvCell(normalize(name)))
       ..write(',')
       ..write(quoteCsvCell(id))
+      ..write(',')
+      ..write(quoteCsvCell(listCode))
       ..write('\r\n');
     var altNames = row['alt_names'] as List<dynamic>?;
     if (altNames == null) {
@@ -158,6 +167,8 @@ Future<void> extConsolidated() async {
           ..write(quoteCsvCell(normalize(a)))
           ..write(',')
           ..write(quoteCsvCell(id))
+          ..write(',')
+          ..write(quoteCsvCell(listCode))
           ..write('\r\n');
       }
     }
@@ -253,7 +264,8 @@ Future<void> extFul() async {
   var ix = 0;
   await for (var l in readCsvLines(fulCsv).skip(1)) {
     ix++;
-    var id = 'FUL$ix';
+    var id = 'EUL$ix';
+    var listCode = 'EUL';
     var row = <String, String>{
       'No.': l[0]!,
       'Country or Region': l[1]!,
@@ -264,7 +276,7 @@ Future<void> extFul() async {
     }
     row['Type of WMD'] = l[4]!;
     row['source'] =
-        'Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry (METI), Japan -';
+        'Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan';
     var rowJson = <String, dynamic>{'id': id, 'body': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {
@@ -281,6 +293,8 @@ Future<void> extFul() async {
       ..write(quoteCsvCell(normalize(n)))
       ..write(',')
       ..write(quoteCsvCell(id))
+      ..write(',')
+      ..write(quoteCsvCell(listCode))
       ..write('\r\n');
     var a = l[3];
     if (a == null) {
@@ -300,6 +314,8 @@ Future<void> extFul() async {
         ..write(quoteCsvCell(normalize(a)))
         ..write(',')
         ..write(quoteCsvCell(id))
+        ..write(',')
+        ..write(quoteCsvCell(listCode))
         ..write('\r\n');
     }
   }

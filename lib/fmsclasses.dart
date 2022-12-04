@@ -44,17 +44,20 @@ class ItemId {
 /// A detected item of the denial lists.
 class DetectedItem implements Comparable {
   /// The internal item ID.
-  late final ItemId itemId;
+  final ItemId itemId;
 
   /// Matched names with score.
   ///
   /// sorted by score
   final List<MatchedEntry> matchedNames;
 
+  /// Code of denial list
+  final String listCode;
+
   /// The body of the detected item in JSON
   final Map<String, dynamic>? body;
 
-  DetectedItem(this.itemId, this.matchedNames, this.body);
+  DetectedItem(this.itemId, this.matchedNames, this.listCode, this.body);
 
   @override
   int compareTo(dynamic other) {
@@ -77,12 +80,14 @@ class DetectedItem implements Comparable {
         matchedNames = json['matchedNames']
             .map<MatchedEntry>((e) => MatchedEntry.fromJson(e))
             .toList(),
+        listCode = json['listCode'],
         body = json['body'];
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'itemId': itemId,
       'matchedNames': matchedNames.map((e) => e.toJson()).toList(),
+      'listCode': listCode,
       if (body != null) 'body': body
     };
   }

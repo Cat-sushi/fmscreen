@@ -29,69 +29,59 @@ part 'fmsclasses.dart';
 
 int _databaseVersion = 0;
 
-class _Entry2ItemIds {
-  final _map = <Entry, List<ItemId>>{};
-  Future<void> readCsv(String path) async {
-    await for (var l in readCsvLines(path)) {
-      if (l.length < 2) {
-        continue;
-      }
-      var name = l[0];
-      var externItemId = l[1];
-      if (name == null || externItemId == null) {
-        continue;
-      }
-      var entry = Entry(name);
-      if (_map[entry] == null) {
-        _map[entry] = [];
-      }
-      _map[entry]!.add(ItemId._fromExternalId(externItemId));
-    }
-  }
-
-  List<ItemId>? operator [](Entry entry) => _map[entry];
-  operator []=(Entry entry, List<ItemId> ids) => _map[entry] = ids;
-}
-
-class _Item2Body {
-  final _map = <ItemId, Map<String, dynamic>>{};
-
-  void readJson(String path) {
-    var jsonString = File(path).readAsStringSync();
-    var json = jsonDecode(jsonString) as List<dynamic>;
-    for (var e in json) {
-      var eid = (e as Map<String, dynamic>)['id']! as String;
-      var body = e['body']! as Map<String, dynamic>;
-      _map[ItemId._fromExternalId(eid)] = body;
-    }
-  }
-
-  Map<String, dynamic>? operator [](ItemId id) => _map[id];
-  operator []=(ItemId id, Map<String, dynamic> body) => _map[id] = body;
-}
-
 /// The screening engine.
 class Screener {
   /// If youu will [stopServers] asynchronously, pass [mutex] `true`.
   Screener([bool mutex = false]) : _mutex = mutex ? Mutex() : null;
 
   final Mutex? _mutex;
-  final _entry2ItemIds = _Entry2ItemIds();
-  final _itemId2Body = _Item2Body();
-  late final FMatcher _fmatcher;
+  final _entry2ItemIds = <Entry, List<ItemId>>{};
+  final _itemId2ListCode = <ItemId, String>{};
+  final _itemId2Body = <ItemId, Map<String, dynamic>>{};
+  final _fmatcher = FMatcher();
   late final FMatcherP _fmatcherp;
+
+  Future<void> _readList(String path) async {
+    await for (var l in readCsvLines(path)) {
+      if (l.length < 3) {
+        continue;
+      }
+      var name = l[0];
+      var externItemId = l[1];
+      var listCode = l[2];
+      if (name == null || externItemId == null || listCode == null) {
+        continue;
+      }
+      var entry = Entry(name);
+      if (_entry2ItemIds[entry] == null) {
+        _entry2ItemIds[entry] = [];
+      }
+      var itemID = ItemId._fromExternalId(externItemId);
+      _entry2ItemIds[entry]!.add(itemID);
+      _itemId2ListCode[itemID] = listCode;
+    }
+  }
+
+  void _readItemId2Body(String path) {
+    var jsonString = File(path).readAsStringSync();
+    var json = jsonDecode(jsonString) as List<dynamic>;
+    for (var e in json) {
+      var eid = (e as Map<String, dynamic>)['id']! as String;
+      var body = e['body']! as Map<String, dynamic>;
+      _itemId2Body[ItemId._fromExternalId(eid)] = body;
+    }
+  }
 
   /// Initialize this screener.
   ///
   /// Call and `await` this before use this screener.
   Future<void> init() async {
-    _fmatcher = FMatcher();
     await _fmatcher.init();
     _databaseVersion = _fmatcher.databaseVersion;
     _fmatcherp = FMatcherP.fromFMatcher(_fmatcher);
     await _fmatcherp.startServers();
-    await _entry2ItemIds.readCsv('database/list.csv');
-    _itemId2Body.readJson('database/id2body.json');
+    await _readList('database/list.csv');
+    _readItemId2Body('database/id2body.json');
   }
 
   /// This stops the internal server `Isolate`s.
@@ -146,11 +136,12 @@ class Screener {
     }
     var detectedItems = <DetectedItem>[];
     for (var e in itemId2Entries.entries) {
+      var listCode = _itemId2ListCode[e.key]!;
       dynamic body;
       if (verbose) {
         body = _itemId2Body[e.key];
       }
-      var detectedItem = DetectedItem(e.key, e.value, body);
+      var detectedItem = DetectedItem(e.key, e.value, listCode, body);
       detectedItems.add(detectedItem);
     }
     detectedItems.sort();

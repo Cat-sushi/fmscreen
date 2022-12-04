@@ -52,28 +52,29 @@ bin/server
 ```console
 $ dart bin/screen.dart -v '888'
 queryStatus:
-  serverId: 3
-  start: 2022-12-02T07:11:27.794243Z
-  durationInMilliseconds: 22
+  serverId: 1
+  start: 2022-12-04T02:30:36.701136Z
+  durationInMilliseconds: 20
   inputString: "888"
   rawQuery: "888"
   letType: none
   terms:
     - "888"
   perfectMatching: false
-  queryScore: 0.8011622123132005
+  queryScore: 0.8011840705289173
   queryFallenBack: false
-  databaseVersion: 2022-12-01T21:39:32.000Z
+  databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "FUL321@1669930772000"
+  - itemId: "EUL321@1670117118000"
     matchedNames:
       - entry: KOREA RUNGRA 888 TRADING CO.
-        score: 0.8011622123132005
+        score: 0.8011840705289173
       - entry: RUNGRA 888 GENERAL TRADING CORP (綾羅888貿易総会社)
-        score: 0.8011622123132005
+        score: 0.8011840705289173
       - entry: KOREA RUNGRA-888 TRADING CORPORATION (朝鮮綾羅888貿易会社)
-        score: 0.8011622123132005
+        score: 0.8011840705289173
+    listCode: EUL
     body:
       No.: "321"
       Country or Region: |-
@@ -90,7 +91,7 @@ detectedItems:
       Type of WMD: |-
         生物、化学、ミサイル、核
         B,C,M,N
-      source: "Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry (METI), Japan -"
+      source: "Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan"
 ```
 
 ### Screen names with perfect matching
@@ -101,8 +102,8 @@ Enclose the whole query with double quates.
 $ dart bin/screen.dart '"abc"' '"def"'
 queryStatus:
   serverId: 0
-  start: 2022-12-02T07:15:11.241759Z
-  durationInMilliseconds: 0
+  start: 2022-12-04T02:29:40.073848Z
+  durationInMilliseconds: 3
   inputString: "abc"
   rawQuery: ABC
   letType: none
@@ -111,21 +112,23 @@ queryStatus:
   perfectMatching: true
   queryScore: 1.0
   queryFallenBack: false
-  databaseVersion: 2022-12-01T21:39:32.000Z
+  databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "CONS7894@1669930772000"
+  - itemId: "CONS7898@1670117118000"
     matchedNames:
       - entry: ABC LLC
         score: 1.0
-  - itemId: "CONS14921@1669930772000"
+    listCode: SDN
+  - itemId: "CONS14939@1670117118000"
     matchedNames:
       - entry: ABC LLC
         score: 1.0
+    listCode: SSI
 
 queryStatus:
-  serverId: 3
-  start: 2022-12-02T07:15:11.242105Z
+  serverId: 2
+  start: 2022-12-04T02:29:40.073917Z
   durationInMilliseconds: 0
   inputString: "def"
   rawQuery: DEF
@@ -135,19 +138,20 @@ queryStatus:
   perfectMatching: true
   queryScore: 1.0
   queryFallenBack: false
-  databaseVersion: 2022-12-01T21:39:32.000Z
+  databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "CONS3520@1669930772000"
+  - itemId: "CONS3524@1670117118000"
     matchedNames:
       - entry: SAZEMANE SANAYE DEF
         score: 1.0
+    listCode: ISN
 ```
 
 ### Get the body with a internal item ID
 
 ```console
-$ dart bin/screen.dart -b CONS3520@1669930772000
+$ dart bin/screen.dart -b CONS3524@1670117118000
 source: Nonproliferation Sanctions (ISN) - State Department
 programs:
   - E.O. 13382

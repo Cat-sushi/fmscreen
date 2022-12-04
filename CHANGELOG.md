@@ -1,13 +1,17 @@
 # CHANGELOG
 
-## 1.0.0
+## 1.1.0
 
-- Initial version.
+- Add the code of denial list to the result.
+
+## 1.0.2
+
+- Make homepage reachable.
 
 ## 1.0.1
 
 - fix typo.
 
-## 1.0.2
+## 1.0.0
 
-- Make homepage reachable.
+- Initial version.

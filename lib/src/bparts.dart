@@ -35,8 +35,8 @@ Stream<String> openQueryListStream(String batchQueryPath) async* {
 String formatOutput(int ix, ScreeningResult result) {
   var csvLine = StringBuffer();
   if (result.detectedItems.isEmpty) {
-    result.detectedItems
-        .add(DetectedItem(ItemId.dummy, [MatchedEntry(Entry(''), 0.0)], null));
+    result.detectedItems.add(
+        DetectedItem(ItemId.dummy, [MatchedEntry(Entry(''), 0.0)], '', null));
   }
   for (var e in result.detectedItems) {
     csvLine.write(result.queryStatus.serverId);
