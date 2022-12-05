@@ -152,7 +152,7 @@ void main(List<String> args) async {
       var clickable = html.replaceAllMapped(regExp,
           (m) => '<a href="${m.group(1)}" target="_blank">${m.group(1)}</a>');
       formatted =
-          '<html><head><style type="text/css">span.hljs-attr {color:blue;}'
+          '<html><head><style type="text/css">span.hljs-attr {color:brown;}'
           '</style></head><body><pre>$clickable</pre></body></html>';
       break;
     default:
