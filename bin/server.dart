@@ -111,6 +111,9 @@ Response _normalizeHandler(Request request) {
 }
 
 Future<Response> _restartHandler(Request request) async {
+  if (request.requestedUri.host != 'localhost') {
+    return Response.badRequest(body: 'From localhost only');
+  }
   print('Restarting servers');
   var newScreener = Screener(true);
   await newScreener.init();
