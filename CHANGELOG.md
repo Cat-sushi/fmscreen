@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-- Add the code of denial list to the result.
+- Add the code of the denial list to the result.
 
 ## 1.0.2
 

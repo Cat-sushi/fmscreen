@@ -33,6 +33,22 @@ dart bin/fetchdl.dart
 
 This fetches lists from [US Government's Consolidated Screening List](https://www.trade.gov/consolidated-screening-list "Consolidated Screening List") and [Japanese METI Foreign End Users List](https://www.meti.go.jp/policy/anpo/law05.html#user-list "安全保障貿易管理**Export Control*関係法令：申請、相談に関する通達").
 
+Currentry, they contains following lists.
+
+- Capta List (CAP) - Treasury Department
+- Denied Persons List (DPL) - Bureau of Industry and Security
+- Entity List (EL) - Bureau of Industry and Security
+- Foreign Sanctions Evaders (FSE) - Treasury Department
+- ITAR Debarred (DTC) - State Department
+- Military End User (MEU) List - Bureau of Industry and Security
+- Non-SDN Chinese Military-Industrial Complex Companies List (CMIC) - Treasury Department
+- Non-SDN Menu-Based Sanctions List (MBS) - Treasury Department
+- Nonproliferation Sanctions (ISN) - State Department
+- Sectoral Sanctions Identifications List (SSI) - Treasury Department
+- Specially Designated Nationals (SDN) - Treasury Department
+- Unverified List (UVL) - Bureau of Industry and Security
+- Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan
+
 ### Compile the web server
 
 ```text
@@ -66,7 +82,7 @@ queryStatus:
   databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "EUL321@1670117118000"
+  - itemId: "EUL321_1670117118000"
     matchedNames:
       - entry: KOREA RUNGRA 888 TRADING CO.
         score: 0.8011840705289173
@@ -76,6 +92,7 @@ detectedItems:
         score: 0.8011840705289173
     listCode: EUL
     body:
+      source: "Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan"
       No.: "321"
       Country or Region: |-
         北朝鮮
@@ -91,7 +108,12 @@ detectedItems:
       Type of WMD: |-
         生物、化学、ミサイル、核
         B,C,M,N
-      source: "Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan"
+```
+
+Equivalent web API.
+
+```text
+http ':8080/?c=0&v=1&q=888'
 ```
 
 ### Screen names with perfect matching
@@ -115,12 +137,12 @@ queryStatus:
   databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "CONS7898@1670117118000"
+  - itemId: "CONS7898_1670117118000"
     matchedNames:
       - entry: ABC LLC
         score: 1.0
     listCode: SDN
-  - itemId: "CONS14939@1670117118000"
+  - itemId: "CONS14939_1670117118000"
     matchedNames:
       - entry: ABC LLC
         score: 1.0
@@ -141,17 +163,23 @@ queryStatus:
   databaseVersion: 2022-12-04T01:25:18.000Z
   message:
 detectedItems:
-  - itemId: "CONS3524@1670117118000"
+  - itemId: "CONS3524_1670117118000"
     matchedNames:
       - entry: SAZEMANE SANAYE DEF
         score: 1.0
     listCode: ISN
 ```
 
+Equivalent web API.
+
+```text
+http ':8080?/c=0' 'Content-type:application/json; charset=utf-8' '[]="abc"' '[]="def"'
+```
+
 ### Get the body with a internal item ID
 
 ```console
-$ dart bin/screen.dart -b CONS3524@1670117118000
+$ dart bin/screen.dart -b CONS3524_1670117118000
 source: Nonproliferation Sanctions (ISN) - State Department
 programs:
   - E.O. 13382
@@ -168,6 +196,12 @@ alt_names:
 source_information_url: https://www.state.gov/key-topics-bureau-of-international-security-and-nonproliferation/nonproliferation-sanctions/
 id: 44048d5165eca98c9556e3e64bed51a0213cc6c94d8ce9caae3d280d
 country: IR
+```
+
+Equivalent web API.
+
+```text
+http ':8080/body/CONS3524_1670117118000'
 ```
 
 ### Run the sample batch
@@ -188,6 +222,12 @@ queries_results.csv
 dart bin/screen.dart --restart
 ```
 
+Equivalent web API. (From localhost only)
+
+```text
+http ':8080/restart'
+```
+
 This makes the server reload the database, reread the configurations and the settings, and purge the result chache.
 This is useful when the denial lists are updated or the configurations/ settings are modified.
 
@@ -196,6 +236,12 @@ This is useful when the denial lists are updated or the configurations/ settings
 ```console
 $ dart bin/screen.dart -n 'abc'
 ABC
+```
+
+Equivalent web API.
+
+```text
+http ':8080/normalize?q=abc'
 ```
 
 Note that matched names from this server are normalized in the same way.
