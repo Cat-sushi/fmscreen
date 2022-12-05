@@ -173,7 +173,7 @@ detectedItems:
 Equivalent web API.
 
 ```text
-http ':8080?/c=0' 'Content-type:application/json; charset=utf-8' '[]="abc"' '[]="def"'
+http ':8080/?c=0' 'Content-type:application/json; charset=utf-8' '[]="abc"' '[]="def"'
 ```
 
 ### Get the body with a internal item ID
