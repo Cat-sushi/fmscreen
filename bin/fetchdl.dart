@@ -267,16 +267,14 @@ Future<void> extFul() async {
     var id = 'EUL$ix';
     var listCode = 'EUL';
     var row = <String, String>{
+      'source': 'Foreigh End User List (EUL) '
+          '- Ministry of Economy, Trade and Industry, Japan',
       'No.': l[0]!,
       'Country or Region': l[1]!,
-      'Company or Organization': l[2]!
+      'Company or Organization': l[2]!,
+      if (l[3] != null) 'Also Known As': l[3]!,
+      'Type of WMD': l[4]!,
     };
-    if (l[3] != null) {
-      row['Also Known As'] = l[3]!;
-    }
-    row['Type of WMD'] = l[4]!;
-    row['source'] =
-        'Foreigh End User List (EUL) - Ministry of Economy, Trade and Industry, Japan';
     var rowJson = <String, dynamic>{'id': id, 'body': row};
     var rowJsonString = jsonEncoderIndent.convert(rowJson);
     if (first) {
