@@ -116,6 +116,8 @@ Equivalent web API.
 http ':8080/?c=0&v=1&q=888'
 ```
 
+`c=0` means temporary disabs result chache.
+
 ### Screen names with perfect matching
 
 Enclose the whole query with double quates.
@@ -215,6 +217,8 @@ $ ls batch
 queries.csv
 queries_results.csv
 ```
+
+`queries.csv` should have only one column which contains a name for screening per line.
 
 ### Reflesh the server
 
