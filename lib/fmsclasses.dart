@@ -26,7 +26,7 @@ class ItemId {
 
   const ItemId._(this.id);
   factory ItemId._fromExternalId(String eid) {
-    var id = '$eid@$_databaseVersion';
+    var id = '${eid}_$_databaseVersion';
     var ret = _canonicalized[id];
     if (ret != null) {
       return ret;
@@ -174,7 +174,7 @@ class QueryStatus {
   }
 }
 
-/// The result of screening
+/// A result of screening
 class ScreeningResult {
   final QueryStatus queryStatus;
   final List<DetectedItem> detectedItems;
