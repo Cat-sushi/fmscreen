@@ -222,7 +222,7 @@ queries_results.csv
 dart bin/screen.dart --restart
 ```
 
-Equivalent web API. (From localhost only)
+Equivalent web API. (Only from localhost)
 
 ```text
 http ':8080/restart'
