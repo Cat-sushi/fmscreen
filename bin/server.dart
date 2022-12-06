@@ -18,7 +18,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fmatch/fmatch.dart';
 import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';

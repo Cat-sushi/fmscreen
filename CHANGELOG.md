@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.2
+
+- Export `normalize` of `package:fmatch/fmatch.dart`.
+
 ## 1.1.1
 
 - Limits restart requests only from localhost.

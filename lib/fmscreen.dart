@@ -22,6 +22,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fmatch/fmatch.dart';
+export 'package:fmatch/fmatch.dart' show normalize;
 import 'package:simple_mutex/simple_mutex.dart';
 
 import 'src/util.dart';
