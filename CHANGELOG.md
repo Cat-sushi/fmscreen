@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.1.1
+
+- Limits restart requests only from localhost.
+- Update documents.
+
 ## 1.1.0
 
 - Add the code of the denial list to the result.

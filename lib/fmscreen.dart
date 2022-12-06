@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/// A screening server for entity/ person name against denial lists such as BIS Entity List.
 library fmscreen;
 
 import 'dart:async';
@@ -38,7 +39,6 @@ class Screener {
   final _entry2ItemIds = <Entry, List<ItemId>>{};
   final _itemId2ListCode = <ItemId, String>{};
   final _itemId2Body = <ItemId, Map<String, dynamic>>{};
-  final _fmatcher = FMatcher();
   late final FMatcherP _fmatcherp;
 
   Future<void> _readList(String path) async {
@@ -76,10 +76,9 @@ class Screener {
   ///
   /// Call and `await` this before use this screener.
   Future<void> init() async {
-    await _fmatcher.init();
-    _databaseVersion = _fmatcher.databaseVersion;
-    _fmatcherp = FMatcherP.fromFMatcher(_fmatcher);
+    _fmatcherp = FMatcherP();
     await _fmatcherp.startServers();
+    _databaseVersion = _fmatcherp.fmatcher.databaseVersion;
     await _readList('database/list.csv');
     _readItemId2Body('database/id2body.json');
   }
@@ -98,6 +97,8 @@ class Screener {
   /// If you need item body, pass [verbose] `true`.
   ///
   /// If you temporarily want to disable result cache, pass [cache] `false`.
+  ///
+  /// This is reentrant and works parallelly with `Isolate`s.
   Future<ScreeningResult> screen(String query,
       {bool cache = true, bool verbose = false}) async {
     var queryResults = _mutex == null
@@ -107,7 +108,7 @@ class Screener {
     return screeningResult;
   }
 
-  /// Do screening of multiple names.
+  /// Do screening of multiple names, parallelly.
   ///
   /// If you need item body, pass [verbose] `true`.
   ///

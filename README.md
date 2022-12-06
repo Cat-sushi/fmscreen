@@ -18,8 +18,8 @@ This makes matching insensitive to spelling variants of legal entity types.
 - White queries for avoiding screening your company itself and consequent false positives.
 - Results cache for time performance.
 - Solo query accepted by the web server for interactive UIs.
-- Bulk queries accepted and processed parallel by the web server for batch applicaions.
-- Text normalizing API to get the global identifier of a neme.
+- Bulk queries accepted and processed parallelly by the web server for batch applicaions.
+- Text normalizing API to get the global identifier of a name.
 - Aggregates/ spreads matched names to itmes of denial lists.
 - And others.
 
@@ -116,7 +116,7 @@ Equivalent web API.
 http ':8080/?c=0&v=1&q=888'
 ```
 
-`c=0` means temporary disabs result chache.
+`c=0` means disabling result chache, temporarily.
 
 ### Screen names with perfect matching
 
@@ -219,6 +219,7 @@ queries_results.csv
 ```
 
 `queries.csv` should have only one column which contains a name for screening per line.
+Actually, the second column and later are treated as comments.
 
 ### Reflesh the server
 
