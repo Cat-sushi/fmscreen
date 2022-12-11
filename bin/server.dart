@@ -18,12 +18,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 late Screener screener;
+late int cacheSize;
+int? port;
+
 
 // Configure routes.
 final _router = Router()
@@ -114,7 +118,7 @@ Future<Response> _restartHandler(Request request) async {
     return Response.badRequest(body: 'Only from localhost');
   }
   print('Restarting servers');
-  var newScreener = Screener(true);
+  var newScreener = Screener(mutex: true, cacheSize: cacheSize);
   await newScreener.init();
   var oldScreener = screener;
   screener = newScreener;
@@ -123,17 +127,42 @@ Future<Response> _restartHandler(Request request) async {
 }
 
 void main(List<String> args) async {
+  var argParser = ArgParser()
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
+    ..addOption('cache',
+        abbr: 'c', defaultsTo: '10000', help: 'result chache size')
+    ..addOption('port', abbr: 'p', valueHelp: 'port');
+  ArgResults options;
+  try {
+    options = argParser.parse(args);
+  } catch (e) {
+    print(argParser.usage);
+    exit(1);
+  }
+  if (options['help'] == true) {
+    print(argParser.usage);
+    exit(0);
+  }
+
+  if (options['cache'] != null) {
+    cacheSize = int.parse(options['cache'] as String);
+  }
+
+  if (options['port'] != null) {
+    port = int.parse(options['port'] as String);
+  }
+
   // Use any available host or container IP (usually `0.0.0.0`).
   final ip = InternetAddress.anyIPv4;
 
   // Configure a pipeline that logs requests.
   final handler = Pipeline().addMiddleware(logRequests()).addHandler(_router);
 
-  screener = Screener(true);
+  screener = Screener(mutex: true, cacheSize: cacheSize);
   await screener.init();
 
   // For running in containers, we respect the PORT environment variable.
-  final port = int.parse(Platform.environment['PORT'] ?? '8080');
-  final server = await serve(handler, ip, port);
+  port ??= int.parse(Platform.environment['PORT'] ?? '8080');
+  final server = await serve(handler, ip, port!);
   print('Server listening on port ${server.port}');
 }

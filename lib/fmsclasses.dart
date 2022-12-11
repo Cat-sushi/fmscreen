@@ -156,6 +156,19 @@ class QueryStatus {
         queryFallenBack = json['queryFallenBack'],
         databaseVersion = json['databaseVersion'],
         message = json['message'];
+  QueryStatus.fromError(String errorMessage)
+      : serverId = 0,
+        start = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+        durationInMilliseconds = 0,
+        inputString = '',
+        rawQuery = '',
+        letType = LetType.none,
+        terms = [],
+        perfectMatching = false,
+        queryScore = 0.0,
+        queryFallenBack = false,
+        databaseVersion = '00000000T000000Z',
+        message = errorMessage;
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'serverId': serverId,
@@ -184,6 +197,9 @@ class ScreeningResult {
         detectedItems = json['detectedItems']
             .map<DetectedItem>((e) => DetectedItem.fromJson(e))
             .toList();
+  ScreeningResult.fromError(String errorMessage)
+      : queryStatus = QueryStatus.fromError(errorMessage),
+      detectedItems = [];
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'queryStatus': queryStatus,

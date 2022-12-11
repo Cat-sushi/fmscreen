@@ -22,7 +22,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fmatch/fmatch.dart';
-export 'package:fmatch/fmatch.dart' show normalize;
+export 'package:fmatch/fmatch.dart' show normalize, LetType;
 import 'package:simple_mutex/simple_mutex.dart';
 
 import 'src/util.dart';
@@ -34,13 +34,18 @@ int _databaseVersion = 0;
 /// The screening engine.
 class Screener {
   /// If youu will [stopServers] asynchronously, pass [mutex] `true`.
-  Screener([bool mutex = false]) : _mutex = mutex ? Mutex() : null;
+  Screener({bool mutex = false, cacheSize = 10000})
+      : _mutex = mutex ? Mutex() : null,
+        _cacheSize = cacheSize;
 
   final Mutex? _mutex;
+  final int _cacheSize;
   final _entry2ItemIds = <Entry, List<ItemId>>{};
   final _itemId2ListCode = <ItemId, String>{};
   final _itemId2Body = <ItemId, Map<String, dynamic>>{};
   late final FMatcherP _fmatcherp;
+  var _started = false;
+  var _stopped = false;
 
   Future<void> _readList(String path) async {
     await for (var l in readCsvLines(path)) {
@@ -77,20 +82,31 @@ class Screener {
   ///
   /// Call and `await` this before use this screener.
   Future<void> init() async {
-    _fmatcherp = FMatcherP();
+    if (_started) {
+      throw 'Bad Status';
+    }
+    var fmatcher = FMatcher();
+    await fmatcher.init();
+    fmatcher.queryResultCacheSize = _cacheSize;
+    _fmatcherp = FMatcherP.fromFMatcher(fmatcher);
     await _fmatcherp.startServers();
     _databaseVersion = _fmatcherp.fmatcher.databaseVersion;
     await _readList('database/list.csv');
     _readItemId2Body('database/id2body.json');
+    _started = true;
   }
 
   /// This stops the internal server `Isolate`s.
   void stopServers() {
+    if (_stopped) {
+      throw 'Bad Status';
+    }
     if (_mutex == null) {
       _fmatcherp.stopServers(); // unawaited
       return;
     }
     _mutex!.critical(_fmatcherp.stopServers); // unawaited
+    _stopped = true;
   }
 
   /// Do screening.
@@ -102,6 +118,9 @@ class Screener {
   /// This is reentrant and works parallelly with `Isolate`s.
   Future<ScreeningResult> screen(String query,
       {bool cache = true, bool verbose = false}) async {
+    if (!_started || _stopped) {
+      throw 'Bad Status';
+    }
     var queryResults = _mutex == null
         ? await _fmatcherp.fmatch(query, cache)
         : await _mutex!.criticalShared(() => _fmatcherp.fmatch(query, cache));
@@ -116,6 +135,9 @@ class Screener {
   /// If you temporarily want to disable result cache, pass [cache] `false`.
   Future<List<ScreeningResult>> screenb(List<String> queries,
       {bool cache = true, bool verbose = false}) async {
+    if (!_started || _stopped) {
+      throw 'Bad Status';
+    }
     var queryResults = _mutex == null
         ? await _fmatcherp.fmatchb(queries, cache)
         : await _mutex!

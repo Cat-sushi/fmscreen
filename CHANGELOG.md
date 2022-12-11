@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## 1.1.3
+## 1.1.5
+
+- Export `LetType` for applications.
+- Add status checks.
+- Add --cache and --port option to the server.
+
+## 1.1.4
 
 - Update the puckage simple_mutex.
 
