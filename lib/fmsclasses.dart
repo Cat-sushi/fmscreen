@@ -151,9 +151,9 @@ class QueryStatus {
         rawQuery = json['rawQuery'],
         letType = LetType.fromJson(json['letType']),
         terms = json['terms'].map<Term>((e) => Term(e)).toList(),
-        perfectMatching = json['perfectMatching'] == 'true' ? true : false,
+        perfectMatching = json['perfectMatching'],
         queryScore = json['queryScore'],
-        queryFallenBack = json['queryFallenBack'] == 'true' ? true : false,
+        queryFallenBack = json['queryFallenBack'],
         databaseVersion = json['databaseVersion'],
         message = json['message'];
   Map<String, dynamic> toJson() {
