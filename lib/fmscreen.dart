@@ -22,7 +22,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fmatch/fmatch.dart';
-export 'package:fmatch/fmatch.dart' show normalize, LetType;
+export 'package:fmatch/fmatch.dart'
+    show normalize, LetType, Term, Entry, MatchedEntry;
 import 'package:simple_mutex/simple_mutex.dart';
 
 import 'src/util.dart';
@@ -91,8 +92,8 @@ class Screener {
     _fmatcherp = FMatcherP.fromFMatcher(fmatcher);
     await _fmatcherp.startServers();
     _databaseVersion = _fmatcherp.fmatcher.databaseVersion;
-    await _readList('database/list.csv');
-    _readItemId2Body('database/id2body.json');
+    await _readList('assets/database/list.csv');
+    _readItemId2Body('assets/database/id2body.json');
     _started = true;
   }
 

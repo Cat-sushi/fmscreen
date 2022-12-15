@@ -21,7 +21,7 @@ import 'package:fmatch/fmatch.dart';
 import 'package:fmscreen/src/util.dart';
 import 'package:html/parser.dart';
 
-final pls = 'database';
+final pls = 'assets/database';
 
 // https://www.trade.gov/consolidated-screening-list JSON
 final consolidatedUri = Uri(

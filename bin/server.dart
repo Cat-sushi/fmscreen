@@ -22,12 +22,14 @@ import 'package:args/args.dart';
 import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
+import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
+
+import 'package:fmscreen/pdf.dart';
 
 late Screener screener;
 late int cacheSize;
 int? port;
-
 
 // Configure routes.
 final _router = Router()
@@ -35,6 +37,7 @@ final _router = Router()
   ..post('/', _multiHandler)
   ..get('/body/<itemId>', _bodyHandler)
   ..get('/normalize', _normalizeHandler)
+  ..get('/pdf', _pdfHandler)
   ..get('/restart', _restartHandler);
 
 Future<Response> _singleHandler(Request request) async {
@@ -113,6 +116,34 @@ Response _normalizeHandler(Request request) {
       headers: {'content-type': 'application/json; charset=utf-8'});
 }
 
+Future<Response> _pdfHandler(Request request) async {
+  var q = request.requestedUri.queryParameters['q'];
+  if (q == null) {
+    return Response.badRequest(body: 'Query is not specified');
+  }
+  var v = request.requestedUri.queryParameters['v'];
+  var vervose = false;
+  if (v != null && v == '1') {
+    vervose = true;
+  }
+  var c = request.requestedUri.queryParameters['c'];
+  var cache = true;
+  if (c != null && c == '0') {
+    cache = false;
+  }
+  var screeningResult =
+      await screener.screen(q, verbose: vervose, cache: cache);
+  var uint8data = await generateDocument(screeningResult);
+  return Response.ok(
+    uint8data,
+    headers: {
+      'content-type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="hoge.pdf"'
+    },
+  );
+  // Content-Disposition: attachment; filename="hoge.txt"
+}
+
 Future<Response> _restartHandler(Request request) async {
   if (request.requestedUri.host != 'localhost') {
     return Response.badRequest(body: 'Only from localhost');
@@ -156,7 +187,10 @@ void main(List<String> args) async {
   final ip = InternetAddress.anyIPv4;
 
   // Configure a pipeline that logs requests.
-  final handler = Pipeline().addMiddleware(logRequests()).addHandler(_router);
+  final handler = Pipeline()
+      .addMiddleware(corsHeaders())
+      .addMiddleware(logRequests())
+      .addHandler(_router);
 
   screener = Screener(mutex: true, cacheSize: cacheSize);
   await screener.init();

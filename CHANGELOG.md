@@ -2,9 +2,10 @@
 
 ## 1.1.5
 
-- Export `LetType` for applications.
+- Export `LetType`, `Term`, `Entry`, `MatchedEntry` for client applications.
+- Move `database` and `configs` to assets.
 - Add status checks.
-- Add --cache and --port option to the server.
+- Add --cache and --port option to the web server.
 
 ## 1.1.4
 

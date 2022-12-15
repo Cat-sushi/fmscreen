@@ -198,7 +198,7 @@ class ScreeningResult {
             .toList();
   ScreeningResult.fromMessage(String message)
       : queryStatus = QueryStatus.fromMessage(message),
-      detectedItems = [];
+        detectedItems = [];
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'queryStatus': queryStatus,
