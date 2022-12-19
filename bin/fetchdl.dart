@@ -137,15 +137,17 @@ Future<void> extConsolidated() async {
       outSinkJson.writeln(',');
     }
     outSinkJson.write(rowJsonString);
-    var name = row['name'] as String;
-    name = name.replaceAll(rNewLine, ' ');
-    outSinkCsv
-      ..write(quoteCsvCell(normalize(name)))
-      ..write(',')
-      ..write(quoteCsvCell(id))
-      ..write(',')
-      ..write(quoteCsvCell(listCode))
-      ..write('\r\n');
+    if (row['name'] != null) {
+      var name = row['name'] as String;
+      name = name.replaceAll(rNewLine, ' ');
+      outSinkCsv
+        ..write(quoteCsvCell(normalize(name)))
+        ..write(',')
+        ..write(quoteCsvCell(id))
+        ..write(',')
+        ..write(quoteCsvCell(listCode))
+        ..write('\r\n');
+    }
     var altNames = row['alt_names'] as List<dynamic>?;
     if (altNames == null) {
       continue;
