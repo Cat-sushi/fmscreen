@@ -24,6 +24,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:shelf_static/shelf_static.dart';
 
 import 'package:fmscreen/pdf.dart';
 
@@ -39,6 +40,11 @@ final _router = Router()
   ..get('/normalize', _normalizeHandler)
   ..get('/pdf', _pdfHandler)
   ..get('/restart', _restartHandler);
+
+final _clientHandler = createStaticHandler('assets/flutter_web',
+    defaultDocument: 'index.html', serveFilesOutsidePath: true);
+
+final _handler = Cascade().add(_router).add(_clientHandler).handler;
 
 Future<Response> _singleHandler(Request request) async {
   var q = request.requestedUri.queryParameters['q'];
@@ -161,7 +167,7 @@ void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
     ..addOption('cache',
-        abbr: 'c', defaultsTo: '10000', help: 'result chache size')
+        abbr: 'c', defaultsTo: '100000', help: 'result chache size')
     ..addOption('port', abbr: 'p', valueHelp: 'port');
   ArgResults options;
   try {
@@ -190,7 +196,7 @@ void main(List<String> args) async {
   final handler = Pipeline()
       .addMiddleware(corsHeaders())
       .addMiddleware(logRequests())
-      .addHandler(_router);
+      .addHandler(_handler);
 
   screener = Screener(mutex: true, cacheSize: cacheSize);
   await screener.init();
