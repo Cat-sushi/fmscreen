@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.6
+
+-Relax SDK requirement.
+
 ## 1.1.5
 
 - Export `LetType`, `Term`, `Entry`, `MatchedEntry` for client applications.
