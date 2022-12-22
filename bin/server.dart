@@ -23,6 +23,7 @@ import 'package:fmscreen/fmscreen.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
+import 'package:shelf_gzip/shelf_gzip.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:shelf_static/shelf_static.dart';
 
@@ -194,6 +195,7 @@ void main(List<String> args) async {
 
   // Configure a pipeline that logs requests.
   final handler = Pipeline()
+      .addMiddleware(gzipMiddleware)
       .addMiddleware(corsHeaders())
       .addMiddleware(logRequests())
       .addHandler(_handler);
