@@ -68,8 +68,8 @@ Future<void> main(List<String> args) async {
     await fetchFul();
   }
 
-  outSinkCsv = File(concatList).openWrite()..add(utf8Bom);
-  outSinkJson = File(concatId2Body).openWrite()..writeln('[');
+  outSinkCsv = File('$concatList.new').openWrite()..add(utf8Bom);
+  outSinkJson = File('$concatId2Body.new').openWrite()..writeln('[');
 
   print("Extracting entries from consolidated list.");
   var start = DateTime.now();
@@ -87,6 +87,17 @@ Future<void> main(List<String> args) async {
   await outSinkCsv.close();
   outSinkJson.write('\n]');
   await outSinkJson.close();
+
+  if (Process.runSync('diff', [concatList, '$concatList.new']).exitCode == 0 &&
+      Process.runSync('diff', [concatId2Body, '$concatId2Body.new']).exitCode ==
+          0) {
+    Process.runSync('rm', ['$concatList.new']);
+    Process.runSync('rm', ['$concatId2Body.new']);
+    exit(0);
+  }
+
+  Process.runSync('mv', ['$concatList.new', concatList]);
+  Process.runSync('mv', ['$concatId2Body.new', concatId2Body]);
 
   print("Building db and idb.");
   final matcher = FMatcher();
