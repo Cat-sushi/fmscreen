@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:io';
 import 'dart:typed_data';
 
 // import 'package:convert/convert.dart';
@@ -28,14 +29,20 @@ Future<Uint8List> generateDocument(ScreeningResult result,
     [PdfPageFormat format = PdfPageFormat.a4]) async {
   final doc = pw.Document(pageMode: PdfPageMode.outlines);
 
-  final font1 = pw.Font.courier(); // TODO(NOTO)
-  final font2 = pw.Font.courierBold(); // TODO(NOTO)
+  final font0 = pw.Font.ttf(ByteData.sublistView(
+      File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync()));
+  final font1 = pw.Font.ttf(ByteData.sublistView(
+      File('assets/fonts/NotoSansSC-Regular.ttf').readAsBytesSync()));
+  final font2 = pw.Font.ttf(ByteData.sublistView(
+      File('assets/fonts/NotoSansTC-Regular.ttf').readAsBytesSync()));
+  final font3 = pw.Font.ttf(ByteData.sublistView(
+      File('assets/fonts/NotoSansJP-Regular.ttf').readAsBytesSync()));
 
   doc.addPage(
     pw.MultiPage(
       theme: pw.ThemeData.withFont(
-        base: font1,
-        bold: font2,
+        base: font0,
+        fontFallback: [font1, font2, font3],
       ),
       pageFormat: format.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
       orientation: pw.PageOrientation.portrait,
@@ -86,7 +93,7 @@ Future<Uint8List> generateDocument(ScreeningResult result,
                 'Preprocessed Name: |${result.queryStatus.terms.map((e) => '${e.string}|').join()}'),
         pw.Paragraph(
             text:
-                'Query Discernment: ${(result.queryStatus.queryScore * 100).floor()}'),
+                'Query Score: ${(result.queryStatus.queryScore * 100).floor()}'),
         pw.Paragraph(
             text:
                 'Screening Date/ Time: ${result.queryStatus.start.toUtc().toIso8601String()}'),

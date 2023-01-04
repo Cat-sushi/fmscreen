@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## 1.1.6
+## 1.1.8
+
+- Add fonts for PDF download.
+
+## 1.1.7
 
 -Relax SDK requirement.
 
