@@ -140,15 +140,22 @@ Future<Response> _pdfHandler(Request request) async {
   }
   var screeningResult =
       await screener.screen(q, verbose: vervose, cache: cache);
+  var s = screeningResult.queryStatus.start.toUtc().toIso8601String();
+  var outName = s.substring(0, 4) +
+      s.substring(5, 7) +
+      s.substring(8, 10) +
+      s.substring(11, 13) +
+      s.substring(14, 16) +
+      s.substring(17, 19);
   var uint8data = await generateDocument(screeningResult);
   return Response.ok(
     uint8data,
     headers: {
       'content-type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="hoge.pdf"'
+      'Content-Disposition':
+          'attachment; filename="juno$outName.pdf"'
     },
   );
-  // Content-Disposition: attachment; filename="hoge.txt"
 }
 
 Future<Response> _restartHandler(Request request) async {
