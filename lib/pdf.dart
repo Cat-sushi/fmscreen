@@ -41,8 +41,8 @@ Future<Uint8List> generateDocument(ScreeningResult result,
   doc.addPage(
     pw.MultiPage(
       theme: pw.ThemeData.withFont(
-        base: font0,
-        fontFallback: [font1, font2, font3],
+        base: font3,
+        fontFallback: [font0, font1, font2],
       ),
       pageFormat: format.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
       orientation: pw.PageOrientation.portrait,
@@ -55,11 +55,22 @@ Future<Uint8List> generateDocument(ScreeningResult result,
           decoration: const pw.BoxDecoration(
               border: pw.Border(
                   bottom: pw.BorderSide(width: 0.5, color: PdfColors.grey))),
-          child: pw.Text(
-            'Screening Result',
-            style: pw.Theme.of(context)
-                .defaultTextStyle
-                .copyWith(color: PdfColors.grey),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'JunoScreen',
+                style: pw.Theme.of(context)
+                    .defaultTextStyle
+                    .copyWith(color: PdfColors.grey),
+              ),
+              pw.Text(
+                'Screening Result',
+                style: pw.Theme.of(context)
+                    .defaultTextStyle
+                    .copyWith(color: PdfColors.grey),
+              ),
+            ],
           ),
         );
       },
@@ -121,7 +132,16 @@ Future<Uint8List> generateDocument(ScreeningResult result,
           },
           data: [...itemList(result)],
         ),
-        pw.Signature(name: 'Test Signer'),
+        // pw.Signature( // needs paid library
+        //   name: 'JunoScreen',
+        //   value: PdfSign(
+        //     privateKey:
+        //         PdfSign.pemPrivateKey(File('key.pem').readAsStringSync()),
+        //     certificates: <Uint8List>[
+        //       PdfSign.pemCertificate(File('cert.pem').readAsStringSync()),
+        //     ],
+        //   ),
+        // ),
       ],
     ),
   );
