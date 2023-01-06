@@ -58,15 +58,17 @@ Future<void> main(List<String> args) async {
   var fetching = !consolidatedJsonFile.existsSync() ||
       DateTime.now()
               .difference(consolidatedJsonFile.lastModifiedSync())
-              .inHours >
-          24 - 1;
+              .inHours >=
+          5;
 
-  if (fetching) {
-    print("Fetching consolidated list.");
-    await fetchConsolidated();
-    print("Fetching foreign user list.");
-    await fetchFul();
+  if (!fetching) {
+    exit(1);
   }
+
+  print("Fetching consolidated list.");
+  await fetchConsolidated();
+  print("Fetching foreign user list.");
+  await fetchFul();
 
   outSinkCsv = File('$concatList.new').openWrite()..add(utf8Bom);
   outSinkJson = File('$concatId2Body.new').openWrite()..writeln('[');
@@ -93,7 +95,7 @@ Future<void> main(List<String> args) async {
           0) {
     Process.runSync('rm', ['$concatList.new']);
     Process.runSync('rm', ['$concatId2Body.new']);
-    exit(0);
+    exit(1);
   }
 
   Process.runSync('mv', ['$concatList.new', concatList]);
