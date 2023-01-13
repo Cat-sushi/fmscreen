@@ -75,7 +75,7 @@ void main(List<String> args) async {
       exit(1);
     }
     var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/body/$queryEncoded';
+    var path = '/s/body/$queryEncoded';
     var request = await httpClient.get('localhost', 8080, path);
     var response = await request.close();
     if (response.statusCode == 408) {
@@ -89,7 +89,7 @@ void main(List<String> args) async {
       exit(1);
     }
     var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/normalize?q=$queryEncoded';
+    var path = '/s/normalize?q=$queryEncoded';
     var request = await httpClient.get('localhost', 8080, path);
     var response = await request.close();
     jsonString = await response.transform(utf8.decoder).join();
@@ -101,7 +101,7 @@ void main(List<String> args) async {
       print(argParser.usage);
       exit(1);
     }
-    var path = '/restart';
+    var path = '/s/restart';
     var request = await httpClient.get('localhost', 8080, path);
     var response = await request.close();
     var responseString = await response.transform(utf8.decoder).join();
@@ -114,12 +114,12 @@ void main(List<String> args) async {
     exit(1);
   } else if (queries.length == 1) {
     var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}&q=$queryEncoded';
+    var path = '/s?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}&q=$queryEncoded';
     var request = await httpClient.get('localhost', 8080, path);
     var response = await request.close();
     jsonString = await response.transform(utf8.decoder).join();
   } else {
-    var path = '?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}';
+    var path = '/s?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}';
     var request = await httpClient.post('localhost', 8080, path);
     request.headers.contentType =
         ContentType('application', 'json', charset: 'utf-8');

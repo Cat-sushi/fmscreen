@@ -35,14 +35,14 @@ int? port;
 
 // Configure routes.
 final _router = Router()
-  ..get('/', _singleHandler)
-  ..post('/', _multiHandler)
-  ..get('/body/<itemId>', _bodyHandler)
-  ..get('/normalize', _normalizeHandler)
-  ..get('/pdf', _pdfHandler)
-  ..get('/restart', _restartHandler);
+  ..get('/s', _singleHandler)
+  ..post('/s', _multiHandler)
+  ..get('/s/body/<itemId>', _bodyHandler)
+  ..get('/s/normalize', _normalizeHandler)
+  ..get('/s/pdf', _pdfHandler)
+  ..get('/s/restart', _restartHandler);
 
-final _clientHandler = createStaticHandler('assets/flutter_web',
+final _clientHandler = createStaticHandler('assets/flutter/web',
     defaultDocument: 'index.html', serveFilesOutsidePath: true);
 
 final _handler = Cascade().add(_router).add(_clientHandler).handler;
