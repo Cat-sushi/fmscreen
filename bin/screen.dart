@@ -40,7 +40,7 @@ void main(List<String> args) async {
         abbr: 'b', negatable: false, help: 'fetch item body with ItemId')
     ..addFlag('verbose', abbr: 'v', negatable: false, help: 'print item body')
     ..addOption('formatter',
-        abbr: 'f', defaultsTo: 'yaml', valueHelp: 'fomatter')
+        abbr: 'f', defaultsTo: 'yamly', valueHelp: 'fomatter')
     ..addFlag('normalize',
         abbr: 'n', negatable: false, help: 'normalize string')
     ..addFlag('restart', negatable: false, help: 'restart server');
@@ -140,6 +140,9 @@ void main(List<String> args) async {
     case 'yaml':
       formatted = myJson2yaml(jsonObject);
       break;
+    case 'yamly':
+      formatted = json2yamly(jsonObject);
+      break;
     case 'md':
       var yaml = myJson2yaml(jsonObject);
       formatted = '```yaml\n$yaml\n```';
@@ -175,4 +178,72 @@ String myJson2yaml(dynamic jsonObject) {
     sb.write(json2yaml(r.cast<String, dynamic>()));
   }
   return sb.toString().trimRight();
+}
+
+enum YamlyContext {
+  top,
+  map,
+  list,
+}
+
+String json2yamly(dynamic jsonObject) =>
+    _json2yamly(jsonObject, 0, YamlyContext.top);
+
+final ls = LineSplitter();
+
+String _json2yamly(dynamic jsonObject, int indent, YamlyContext c) {
+  var ret = StringBuffer();
+  if (jsonObject is Map) {
+    var first = true;
+    if (c == YamlyContext.map) {
+      ret.write('\n');
+      first = false;
+    }
+    for (var e in jsonObject.entries) {
+      if (first) {
+        first = false;
+      } else {
+        ret.write('  ' * indent);
+      }
+      ret.write('${e.key}: ');
+      ret.write(_json2yamly(e.value, indent + 1, YamlyContext.map));
+    }
+  } else if (jsonObject is List) {
+    var first = true;
+    if (c == YamlyContext.map) {
+      ret.write('\n');
+      first = false;
+    }
+    for (var e in jsonObject) {
+      if (first) {
+        first = false;
+      } else {
+        ret.write('  ' * indent);
+      }
+      ret.write('- ');
+      ret.write(_json2yamly(e, indent + 1, YamlyContext.list));
+    }
+  } else if (jsonObject is String) {
+    var lines = ls.convert(jsonObject);
+    if (lines.length > 1) {
+      var first = true;
+      if (c == YamlyContext.list || c == YamlyContext.map) {
+        ret.write('\n');
+        first = false;
+      }
+      for (var l in lines) {
+        if (first) {
+          first = false;
+        } else {
+          ret.write('  ' * indent);
+        }
+        ret.write('$l\n');
+      }
+    } else {
+      ret.write('$jsonObject\n');
+    }
+  } else {
+    ret.write('$jsonObject\n');
+  }
+  return ret.toString();
 }
