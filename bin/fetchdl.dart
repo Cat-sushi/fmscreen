@@ -210,7 +210,7 @@ Object? surpressNullAndEmptyPropertiesFromJson(Object? json) {
     for (var e in json.entries) {
       var r = surpressNullAndEmptyPropertiesFromJson(e.value);
       if (r != null) {
-        ret[e.key] = r;
+        ret[e.key as String] = r;
       }
     }
     if (ret.isEmpty) {

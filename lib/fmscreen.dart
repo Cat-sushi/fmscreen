@@ -35,7 +35,7 @@ int _databaseVersion = 0;
 /// The screening engine.
 class Screener {
   /// If youu will [stopServers] asynchronously, pass [mutex] `true`.
-  Screener({bool mutex = false, cacheSize = 10000})
+  Screener({bool mutex = false, int cacheSize = 10000})
       : _mutex = mutex ? Mutex() : null,
         _cacheSize = cacheSize;
 
@@ -162,7 +162,7 @@ class Screener {
     var detectedItems = <DetectedItem>[];
     for (var e in itemId2Entries.entries) {
       var listCode = _itemId2ListCode[e.key]!;
-      dynamic body;
+      Map<String, dynamic>? body;
       if (verbose) {
         body = _itemId2Body[e.key];
       }

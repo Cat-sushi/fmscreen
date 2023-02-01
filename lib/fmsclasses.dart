@@ -42,7 +42,7 @@ class ItemId {
 }
 
 /// A detected item of the denial lists.
-class DetectedItem implements Comparable {
+class DetectedItem implements Comparable<DetectedItem> {
   /// The internal item ID.
   final ItemId itemId;
 
