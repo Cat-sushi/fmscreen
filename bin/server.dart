@@ -173,7 +173,7 @@ Future<Response> _restartHandler(Request request) async {
 
 void main(List<String> args) async {
   var argParser = ArgParser()
-    ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('cache',
         abbr: 'c', defaultsTo: '100000', help: 'result chache size')
     ..addOption('port', abbr: 'p', valueHelp: 'port');

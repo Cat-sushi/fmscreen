@@ -39,7 +39,7 @@ var cacheHits2 = 0;
 
 void main(List<String> args) async {
   var argParser = ArgParser()
-    ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('bulk', abbr: 'b', valueHelp: 'bulk size of request')
     ..addOption('input', abbr: 'i', valueHelp: 'input file');
   var options = argParser.parse(args);
