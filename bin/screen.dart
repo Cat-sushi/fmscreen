@@ -34,13 +34,13 @@ var cacheHits2 = 0;
 
 void main(List<String> args) async {
   var argParser = ArgParser()
-    ..addFlag('help', abbr: 'h', negatable: false, help: 'print tis help')
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addFlag('cache', abbr: 'c', negatable: false, help: 'activate cache')
     ..addFlag('body',
         abbr: 'b', negatable: false, help: 'fetch item body with ItemId')
     ..addFlag('verbose', abbr: 'v', negatable: false, help: 'print item body')
     ..addOption('formatter',
-        abbr: 'f', defaultsTo: 'yamly', valueHelp: 'fomatter')
+        abbr: 'f', defaultsTo: 'yamly', valueHelp: 'json/yaml/yamly/md/html')
     ..addFlag('normalize',
         abbr: 'n', negatable: false, help: 'normalize string')
     ..addFlag('restart', negatable: false, help: 'restart server');
