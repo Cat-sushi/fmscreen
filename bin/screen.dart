@@ -199,7 +199,7 @@ enum YamlyContext {
 }
 
 String json2yamly(dynamic jsonObject) =>
-    _json2yamly(jsonObject, 0, YamlyContext.top);
+    _json2yamly(jsonObject, 0, YamlyContext.top).trimRight();
 
 final ls = LineSplitter();
 
