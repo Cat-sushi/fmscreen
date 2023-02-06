@@ -35,7 +35,10 @@ var cacheHits2 = 0;
 void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
-    ..addOption('address', abbr: 'a', defaultsTo: 'http://localhost:8080')
+    ..addOption('address',
+        abbr: 'a',
+        defaultsTo: 'http://localhost:8080',
+        help: '(http|http)://host(:port)?')
     ..addFlag('cache', abbr: 'c', negatable: false, help: 'activate cache')
     ..addFlag('body',
         abbr: 'b', negatable: false, help: 'fetch item body with ItemId')
@@ -59,6 +62,10 @@ void main(List<String> args) async {
 
   var addr = options['address'] as String;
   var url = Uri.tryParse(addr) ?? Uri.http('localhost:8080');
+  if (!url.hasAuthority) {
+    print(argParser.usage);
+    exit(1);
+  }
   var cache = options['cache'] as bool;
   var body = options['body'] as bool;
   var verbose = options['verbose'] as bool;
