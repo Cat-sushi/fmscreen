@@ -35,6 +35,7 @@ var cacheHits2 = 0;
 void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
+    ..addOption('address', abbr: 'a', defaultsTo: 'http://localhost:8080')
     ..addFlag('cache', abbr: 'c', negatable: false, help: 'activate cache')
     ..addFlag('body',
         abbr: 'b', negatable: false, help: 'fetch item body with ItemId')
@@ -56,6 +57,8 @@ void main(List<String> args) async {
     exit(0);
   }
 
+  var addr = options['address'] as String;
+  var url = Uri.tryParse(addr) ?? Uri.http('localhost:8080');
   var cache = options['cache'] as bool;
   var body = options['body'] as bool;
   var verbose = options['verbose'] as bool;
@@ -66,17 +69,14 @@ void main(List<String> args) async {
 
   var httpClient = HttpClient();
 
-  var queryJsonString = jsonEncode(queries);
-
   dynamic jsonString;
   if (body) {
     if (queries.length != 1) {
       print(argParser.usage);
       exit(1);
     }
-    var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/s/body/$queryEncoded';
-    var request = await httpClient.get('localhost', 8080, path);
+    url = url.replace(path: '/s/body/${queries[0]}');
+    var request = await httpClient.getUrl(url);
     var response = await request.close();
     if (response.statusCode == 408) {
       print('Session timed out.');
@@ -88,9 +88,8 @@ void main(List<String> args) async {
       print(argParser.usage);
       exit(1);
     }
-    var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/s/normalize?q=$queryEncoded';
-    var request = await httpClient.get('localhost', 8080, path);
+    url = url.replace(path: '/s/normalize', queryParameters: {'q': queries[0]});
+    var request = await httpClient.getUrl(url);
     var response = await request.close();
     jsonString = await response.transform(utf8.decoder).join();
     var normalized = jsonDecode(jsonString);
@@ -101,8 +100,8 @@ void main(List<String> args) async {
       print(argParser.usage);
       exit(1);
     }
-    var path = '/s/restart';
-    var request = await httpClient.get('localhost', 8080, path);
+    url = url.replace(path: '/s/restart');
+    var request = await httpClient.getUrl(url);
     var response = await request.close();
     var responseString = await response.transform(utf8.decoder).join();
     print(responseString);
@@ -113,14 +112,27 @@ void main(List<String> args) async {
     httpClient.close();
     exit(1);
   } else if (queries.length == 1) {
-    var queryEncoded = Uri.encodeComponent(queries[0]);
-    var path = '/s?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}&q=$queryEncoded';
-    var request = await httpClient.get('localhost', 8080, path);
+    url = url.replace(
+      path: '/s',
+      queryParameters: {
+        'c': (cache ? '1' : '0'),
+        'v': (verbose ? '1' : '0'),
+        'q': queries[0],
+      },
+    );
+    var request = await httpClient.getUrl(url);
     var response = await request.close();
     jsonString = await response.transform(utf8.decoder).join();
   } else {
-    var path = '/s?c=${cache ? 1 : 0}&v=${verbose ? 1 : 0}';
-    var request = await httpClient.post('localhost', 8080, path);
+    var queryJsonString = jsonEncode(queries);
+    url = url.replace(
+      path: '/s',
+      queryParameters: {
+        'c': (cache ? '1' : '0'),
+        'v': (verbose ? '1' : '0'),
+      },
+    );
+    var request = await httpClient.postUrl(url);
     request.headers.contentType =
         ContentType('application', 'json', charset: 'utf-8');
     request.write(queryJsonString);
