@@ -83,37 +83,49 @@ void main(List<String> args) async {
       exit(1);
     }
     url = url.replace(path: '/s/body/${queries[0]}');
-    var request = await httpClient.getUrl(url);
-    var response = await request.close();
-    if (response.statusCode == 408) {
-      print('Session timed out.');
-      exit(1);
+    try {
+      var request = await httpClient.getUrl(url);
+      var response = await request.close();
+      if (response.statusCode == 408) {
+        print('Session timed out.');
+        exit(1);
+      }
+      jsonString = await response.transform(utf8.decoder).join();
+    } catch (e) {
+      jsonString = '"Server not responding"';
     }
-    jsonString = await response.transform(utf8.decoder).join();
   } else if (normalize) {
     if (queries.length != 1) {
       print(argParser.usage);
       exit(1);
     }
     url = url.replace(path: '/s/normalize', queryParameters: {'q': queries[0]});
-    var request = await httpClient.getUrl(url);
-    var response = await request.close();
-    jsonString = await response.transform(utf8.decoder).join();
-    var normalized = jsonDecode(jsonString);
-    print(normalized);
-    exit(0);
+    try {
+      var request = await httpClient.getUrl(url);
+      var response = await request.close();
+      jsonString = await response.transform(utf8.decoder).join();
+      var normalized = jsonDecode(jsonString);
+      print(normalized);
+      exit(0);
+    } catch (e) {
+      jsonString = '"Server not responding"';
+    }
   } else if (restart) {
     if (queries.isNotEmpty) {
       print(argParser.usage);
       exit(1);
     }
     url = url.replace(path: '/s/restart');
-    var request = await httpClient.getUrl(url);
-    var response = await request.close();
-    var responseString = await response.transform(utf8.decoder).join();
-    print(responseString);
-    httpClient.close();
-    exit(0);
+    try {
+      var request = await httpClient.getUrl(url);
+      var response = await request.close();
+      var responseString = await response.transform(utf8.decoder).join();
+      print(responseString);
+      httpClient.close();
+      exit(0);
+    } catch (e) {
+      jsonString = '"Server not responding"';
+    }
   } else if (queries.isEmpty) {
     print(argParser.usage);
     httpClient.close();
@@ -127,9 +139,13 @@ void main(List<String> args) async {
         'q': queries[0],
       },
     );
-    var request = await httpClient.getUrl(url);
-    var response = await request.close();
-    jsonString = await response.transform(utf8.decoder).join();
+    try {
+      var request = await httpClient.getUrl(url);
+      var response = await request.close();
+      jsonString = await response.transform(utf8.decoder).join();
+    } catch (e) {
+      jsonString = '"Server not responding"';
+    }
   } else {
     var queryJsonString = jsonEncode(queries);
     url = url.replace(
@@ -139,12 +155,16 @@ void main(List<String> args) async {
         'v': (verbose ? '1' : '0'),
       },
     );
-    var request = await httpClient.postUrl(url);
-    request.headers.contentType =
-        ContentType('application', 'json', charset: 'utf-8');
-    request.write(queryJsonString);
-    var response = await request.close();
-    jsonString = await response.transform(utf8.decoder).join();
+    try {
+      var request = await httpClient.postUrl(url);
+      request.headers.contentType =
+          ContentType('application', 'json', charset: 'utf-8');
+      request.write(queryJsonString);
+      var response = await request.close();
+      jsonString = await response.transform(utf8.decoder).join();
+    } catch (e) {
+      jsonString = '"Server not responding"';
+    }
   }
   httpClient.close();
 

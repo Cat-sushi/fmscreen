@@ -139,9 +139,9 @@ class QueryStatus {
         perfectMatching = result.cachedResult.cachedQuery.perfectMatching,
         queryScore = result.cachedResult.queryScore,
         queryFallenBack = result.cachedResult.queryFallenBack,
-        databaseVersion = DateTime.fromMillisecondsSinceEpoch(_databaseVersion)
-            .toUtc()
-            .toIso8601String(),
+        databaseVersion =
+            DateTime.fromMillisecondsSinceEpoch(_databaseVersion, isUtc: true)
+                .toIso8601String(),
         message = result.message;
   QueryStatus.fromJson(Map<String, dynamic> json)
       : serverId = json['serverId'],
@@ -167,7 +167,8 @@ class QueryStatus {
         perfectMatching = false,
         queryScore = 0.0,
         queryFallenBack = false,
-        databaseVersion = '00000000T000000Z';
+        databaseVersion = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true)
+            .toIso8601String();
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'serverId': serverId,

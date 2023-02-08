@@ -3,6 +3,7 @@
 ## 1.1.8
 
 - Add fonts for PDF download.
+- Improve network error handling
 
 ## 1.1.7
 
