@@ -82,14 +82,14 @@ class Screener {
   /// Initialize this screener.
   ///
   /// Call and `await` this before use this screener.
-  Future<void> init() async {
+  Future<void> init({int serverCount = 0}) async {
     if (_started) {
       throw 'Bad Status';
     }
     var fmatcher = FMatcher();
     await fmatcher.init();
     fmatcher.queryResultCacheSize = _cacheSize;
-    _fmatcherp = FMatcherP.fromFMatcher(fmatcher);
+    _fmatcherp = FMatcherP.fromFMatcher(fmatcher, serverCount: serverCount);
     await _fmatcherp.startServers();
     _databaseVersion = _fmatcherp.fmatcher.databaseVersion;
     await _readList('assets/database/list.csv');

@@ -31,6 +31,7 @@ import 'package:fmscreen/pdf.dart';
 
 late Screener screener;
 late int cacheSize;
+late int serverCount;
 int? port;
 
 // Configure routes.
@@ -152,8 +153,7 @@ Future<Response> _pdfHandler(Request request) async {
     uint8data,
     headers: {
       'content-type': 'application/pdf',
-      'Content-Disposition':
-          'attachment; filename="juno$outName.pdf"'
+      'Content-Disposition': 'attachment; filename="juno$outName.pdf"'
     },
   );
 }
@@ -164,7 +164,7 @@ Future<Response> _restartHandler(Request request) async {
   }
   print('Restarting servers');
   var newScreener = Screener(mutex: true, cacheSize: cacheSize);
-  await newScreener.init();
+  await newScreener.init(serverCount: serverCount);
   var oldScreener = screener;
   screener = newScreener;
   oldScreener.stopServers();
@@ -176,6 +176,8 @@ void main(List<String> args) async {
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('cache',
         abbr: 'c', defaultsTo: '100000', help: 'result chache size')
+    ..addOption('server',
+        abbr: 's', defaultsTo: '0', help: 'number of server threads')
     ..addOption('port', abbr: 'p', valueHelp: 'port');
   ArgResults options;
   try {
@@ -193,6 +195,10 @@ void main(List<String> args) async {
     cacheSize = int.parse(options['cache'] as String);
   }
 
+  if (options['server'] != null) {
+    serverCount = int.parse(options['server'] as String);
+  }
+
   if (options['port'] != null) {
     port = int.parse(options['port'] as String);
   }
@@ -208,7 +214,7 @@ void main(List<String> args) async {
       .addHandler(_handler);
 
   screener = Screener(mutex: true, cacheSize: cacheSize);
-  await screener.init();
+  await screener.init(serverCount: serverCount);
 
   // For running in containers, we respect the PORT environment variable.
   port ??= int.parse(Platform.environment['PORT'] ?? '8080');
