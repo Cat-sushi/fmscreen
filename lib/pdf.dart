@@ -98,7 +98,6 @@ Future<Uint8List> generateDocument(ScreeningResult result,
           ),
         ),
         pw.Paragraph(text: 'Input string: ${result.queryStatus.inputString}'),
-        pw.Paragraph(text: 'Normalized Name: ${result.queryStatus.rawQuery}'),
         pw.Paragraph(
             text:
                 'Preprocessed Name: |${result.queryStatus.terms.map((e) => '${e.string}|').join()}'),

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.2.0
+
+- Add option for number of server threads to the server.
+- Simplify PDF output.
+
 ## 1.1.8
 
 - Add fonts for PDF download.

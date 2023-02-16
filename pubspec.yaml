@@ -1,6 +1,6 @@
 name: fmscreen
 description: A screening server for entity/ person name against denial lists such as BIS Entity List.
-version: 1.1.8
+version: 1.2.0
 homepage: https://github.com/Cat-sushi/fmscreen
 
 environment:
