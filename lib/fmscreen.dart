@@ -34,12 +34,11 @@ int _databaseVersion = 0;
 
 /// The screening engine.
 class Screener {
-  /// If youu will [stopServers] asynchronously, pass [mutex] `true`.
-  Screener({bool mutex = false, int cacheSize = 10000})
-      : _mutex = mutex ? Mutex() : null,
+  Screener({int cacheSize = 10000})
+      : _mutex = Mutex(),
         _cacheSize = cacheSize;
 
-  final Mutex? _mutex;
+  final Mutex _mutex;
   final int _cacheSize;
   final _entry2ItemIds = <Entry, List<ItemId>>{};
   final _itemId2ListCode = <ItemId, String>{};
@@ -98,16 +97,12 @@ class Screener {
   }
 
   /// This stops the internal server `Isolate`s.
-  void stopServers() {
+  Future<void> stopServers() async {
     if (_stopped) {
       throw 'Bad Status';
     }
-    if (_mutex == null) {
-      _fmatcherp.stopServers(); // unawaited
-      return;
-    }
-    _mutex!.critical(_fmatcherp.stopServers); // unawaited
     _stopped = true;
+    await _mutex.critical(_fmatcherp.stopServers);
   }
 
   /// Do screening.
@@ -122,9 +117,8 @@ class Screener {
     if (!_started || _stopped) {
       throw 'Bad Status';
     }
-    var queryResults = _mutex == null
-        ? await _fmatcherp.fmatch(query, cache)
-        : await _mutex!.criticalShared(() => _fmatcherp.fmatch(query, cache));
+    var queryResults =
+        await _mutex.criticalShared(() => _fmatcherp.fmatch(query, cache));
     var screeningResult = _detectItems(queryResults, verbose);
     return screeningResult;
   }
@@ -139,10 +133,8 @@ class Screener {
     if (!_started || _stopped) {
       throw 'Bad Status';
     }
-    var queryResults = _mutex == null
-        ? await _fmatcherp.fmatchb(queries, cache)
-        : await _mutex!
-            .criticalShared(() => _fmatcherp.fmatchb(queries, cache));
+    var queryResults =
+        await _mutex.criticalShared(() => _fmatcherp.fmatchb(queries, cache));
     var screeningResults = List.generate(
         queryResults.length, (i) => _detectItems(queryResults[i], verbose));
     return screeningResults;

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-part of fmscreen;
+part of 'fmscreen.dart';
 
 /// Internal ID of a item of the denial lists.
 ///

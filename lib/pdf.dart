@@ -121,7 +121,7 @@ Future<Uint8List> generateDocument(ScreeningResult result,
             ],
           ),
         ),
-        pw.Table.fromTextArray(
+        pw.TableHelper.fromTextArray(
           context: context,
           columnWidths: {
             0: pw.IntrinsicColumnWidth(),

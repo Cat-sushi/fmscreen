@@ -12,5 +12,5 @@ void main(List<String> args) async {
   final resultJsonString = jsonEncorder.convert(resultJsonObject);
   print(resultJsonString);
 
-  screener.stopServers();
+  await screener.stopServers();
 }

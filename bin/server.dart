@@ -46,7 +46,7 @@ final _router = Router()
 final _clientHandler = createStaticHandler('assets/flutter/web',
     defaultDocument: 'index.html', serveFilesOutsidePath: true);
 
-final _handler = Cascade().add(_router).add(_clientHandler).handler;
+final _handler = Cascade().add(_router.call).add(_clientHandler).handler;
 
 Future<Response> _singleHandler(Request request) async {
   var q = request.requestedUri.queryParameters['q'];
@@ -163,11 +163,11 @@ Future<Response> _restartHandler(Request request) async {
     return Response.badRequest(body: 'Only from localhost');
   }
   print('Restarting servers');
-  var newScreener = Screener(mutex: true, cacheSize: cacheSize);
+  var newScreener = Screener(cacheSize: cacheSize);
   await newScreener.init(serverCount: serverCount);
   var oldScreener = screener;
   screener = newScreener;
-  oldScreener.stopServers();
+  await oldScreener.stopServers();
   return Response.ok('Servers restartd: ${DateTime.now()}\n');
 }
 
@@ -213,7 +213,7 @@ void main(List<String> args) async {
       .addMiddleware(logRequests())
       .addHandler(_handler);
 
-  screener = Screener(mutex: true, cacheSize: cacheSize);
+  screener = Screener(cacheSize: cacheSize);
   await screener.init(serverCount: serverCount);
 
   // For running in containers, we respect the PORT environment variable.
