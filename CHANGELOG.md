@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.3.0
+
+- Update Dart SDK constraints.
+
 ## 1.2.0
 
 - Add option for number of server threads to the server.
