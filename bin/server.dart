@@ -172,6 +172,9 @@ Future<Response> _restartHandler(Request request) async {
 }
 
 void main(List<String> args) async {
+  Directory.current = File.fromUri(Platform.script).parent;
+  Directory.current = '..';
+
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('cache',
