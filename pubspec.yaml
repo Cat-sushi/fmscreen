@@ -9,6 +9,7 @@ environment:
 dependencies:
   args: ^2.0.0
   async: ^2.9.0
+  excel: ^4.0.2
   fmatch: ^1.2.0
   highlight: ^0.7.0
   html: ^0.15.1

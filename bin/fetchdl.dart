@@ -17,30 +17,35 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:async/async.dart';
+import 'package:excel/excel.dart';
 import 'package:fmatch/fmatch.dart';
 import 'package:fmscreen/src/util.dart';
 import 'package:html/parser.dart';
 
-final pls = 'assets/database';
+final databaseDirectoryPath = 'assets/database';
 
 // https://www.trade.gov/consolidated-screening-list JSON
 final consolidatedUri = Uri(
     scheme: 'https',
     host: 'data.trade.gov',
     path: '/downloadable_consolidated_screening_list/v1/consolidated.json');
-final consolidatedJson = '$pls/consolidated.json';
-final consolidatedJsonIndent = '$pls/consolidated_indent.json';
+final consolidatedJsonPath = '$databaseDirectoryPath/consolidated.json';
+final consolidatedJsonIndentPath =
+    '$databaseDirectoryPath/consolidated_indent.json';
 
 final fulUri = Uri(
     scheme: 'https', host: 'www.meti.go.jp', path: '/policy/anpo/law05.html');
-final fulHtml = '$pls/ful.html';
-final fulXlsx = '$pls/ful.xlsx';
-final fulCsv = '$pls/ful.csv';
+final fulHtmlPath = '$databaseDirectoryPath/ful.html';
+final fulXlsxPath = '$databaseDirectoryPath/ful.xlsx';
+final fulCsvPath = '$databaseDirectoryPath/ful.csv';
+final dbPath = '$databaseDirectoryPath/db.csv';
+final idbPath = '$databaseDirectoryPath/idb.json';
 
-final concatList = '$pls/list.csv';
-late final IOSink outSinkCsv;
-final concatId2Body = '$pls/id2body.json';
-late final IOSink outSinkJson;
+final listCsvPath = '$databaseDirectoryPath/list.csv';
+late final IOSink listCsvOutSink;
+final id2BodyJsonPath = '$databaseDirectoryPath/id2body.json';
+late final IOSink id2BodyJsonOutSink;
 var first = true;
 
 final rBulletSplitter =
@@ -54,64 +59,160 @@ final rNewLine = RegExp(r'[\r\n]+', unicode: true);
 final jsonEncoderIndent = JsonEncoder.withIndent('  ');
 
 Future<void> main(List<String> args) async {
-  var consolidatedJsonFile = File(consolidatedJson);
-  var fetching = !consolidatedJsonFile.existsSync() ||
+  Directory.current = File.fromUri(Platform.script).parent;
+  Directory.current = '..';
+
+  final consolidatedJsonFile = File(consolidatedJsonPath);
+  final fetching = !consolidatedJsonFile.existsSync() ||
       DateTime.now()
               .difference(consolidatedJsonFile.lastModifiedSync())
               .inHours >=
           5;
 
-  if (!fetching) {
-    exit(1);
+  var start = DateTime.now();
+  var end = start;
+  if (fetching) {
+    print("Fetching consolidated list.");
+    await fetchConsolidatedJson();
+    end = DateTime.now();
+    print(end.difference(start).inMilliseconds);
+
+    start = end;
+    print("Fetching foreign user list.");
+    await fetchFulExlsx();
+    end = DateTime.now();
+    print(end.difference(start).inMilliseconds);
   }
 
-  print("Fetching consolidated list.");
-  await fetchConsolidated();
-  print("Fetching foreign user list.");
-  await fetchFul();
-
-  outSinkCsv = File('$concatList.new').openWrite()..add(utf8Bom);
-  outSinkJson = File('$concatId2Body.new').openWrite()..writeln('[');
+  listCsvOutSink = File('$listCsvPath.new').openWrite()..add(utf8Bom);
+  id2BodyJsonOutSink = File('$id2BodyJsonPath.new').openWrite()..writeln('[');
 
   print("Extracting entries from consolidated list.");
-  var start = DateTime.now();
-  await extConsolidated();
-  await outSinkCsv.flush();
-  await outSinkJson.flush();
-  var end = DateTime.now();
-  print(end.difference(start).inMilliseconds);
   start = end;
-  print("Extracting entries from foreign user list.");
-  await extFul();
+  await extractFromConsolidatedJson();
+  await listCsvOutSink.flush();
+  await id2BodyJsonOutSink.flush();
   end = DateTime.now();
   print(end.difference(start).inMilliseconds);
 
-  await outSinkCsv.close();
-  outSinkJson.write('\n]');
-  await outSinkJson.close();
+  start = end;
+  print("Extracting entries from foreign user list.");
+  await extractFromFulExlsx();
+  end = DateTime.now();
+  print(end.difference(start).inMilliseconds);
 
-  if (Process.runSync('diff', [concatList, '$concatList.new']).exitCode == 0 &&
-      Process.runSync('diff', [concatId2Body, '$concatId2Body.new']).exitCode ==
-          0) {
-    Process.runSync('rm', ['$concatList.new']);
-    Process.runSync('rm', ['$concatId2Body.new']);
-    exit(1);
+  await listCsvOutSink.close();
+  id2BodyJsonOutSink.write('\n]');
+  await id2BodyJsonOutSink.close();
+
+  if (await fileDiff(listCsvPath, '$listCsvPath.new') ||
+      await fileDiff(id2BodyJsonPath, '$id2BodyJsonPath.new')) {
+    try {
+      File(listCsvPath).deleteSync();
+    } catch (e) {
+      // do nothing
+    }
+    try {
+      File(id2BodyJsonPath).deleteSync();
+    } catch (e) {
+      // do nothing
+    }
+    File('$listCsvPath.new').renameSync(listCsvPath);
+    File('$id2BodyJsonPath.new').renameSync(id2BodyJsonPath);
+  } else {
+    File('$listCsvPath.new').deleteSync();
+    File('$id2BodyJsonPath.new').deleteSync();
   }
 
-  Process.runSync('mv', ['$concatList.new', concatList]);
-  Process.runSync('mv', ['$concatId2Body.new', concatId2Body]);
-
+  try {
+    File(dbPath).renameSync('$dbPath.old');
+  } catch (e) {
+    // do nothing;
+  }
+  try {
+    File(idbPath).renameSync('$idbPath.old');
+  } catch (e) {
+    // do nothing;
+  }
   print("Building db and idb.");
   final matcher = FMatcher();
   await matcher.init();
+  if (!await fileDiff(dbPath, '$dbPath.old') &&
+      !await fileDiff(idbPath, '$idbPath.old')) {
+    try {
+      await File('$dbPath.old').delete();
+    } catch (e) {
+      // do nothing;
+    }
+    try {
+      await File('$idbPath.old').delete();
+    } catch (e) {
+      // do nothing;
+    }
+    print('db and idb are not updated.');
+    exit(1);
+  }
+  try {
+    await File('$dbPath.old').delete();
+  } catch (e) {
+    // do nothing
+  }
+  try {
+    await File('$idbPath.old').delete();
+  } catch (e) {
+    // do nothing
+  }
+  print('db and/or idb are updated.');
 }
 
-Future<void> fetchConsolidated() async {
+Future<bool> fileDiff(String path1, String path2) async {
+  final file1 = File(path1);
+  final file2 = File(path2);
+  if (!file1.existsSync() || !file2.existsSync()) {
+    return true;
+  }
+  final Stream<List<int>> stream1;
+  try {
+    stream1 = file1.openRead();
+  } catch (e) {
+    return true;
+  }
+  var lineStream1 =
+      stream1.transform(utf8.decoder).transform(const LineSplitter());
+  final Stream<List<int>> stream2;
+  try {
+    stream2 = file2.openRead();
+  } catch (e) {
+    return true;
+  }
+  var lineStream2 = stream2
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .asBroadcastStream(
+          onListen: (s) => s.resume(), onCancel: (s) => s.pause());
+  await for (final line1 in lineStream1) {
+    String line2;
+    try {
+      line2 = await lineStream2.first;
+    } catch (e) {
+      return true;
+    }
+    if (line1 != line2) {
+      return true;
+    }
+  }
+  if (await lineStream2.firstOrNull != null) {
+    return true;
+  }
+  return false;
+}
+
+Future<void> fetchConsolidatedJson() async {
   var client = HttpClient();
   try {
     HttpClientRequest request = await client.getUrl(consolidatedUri);
     HttpClientResponse response = await request.close();
-    var outSink = File(consolidatedJson).openWrite();
+    var outSink = File(consolidatedJsonPath).openWrite();
     await for (var chank in response) {
       outSink.add(chank);
     }
@@ -123,11 +224,11 @@ Future<void> fetchConsolidated() async {
 
 final regExpSource = RegExp(r'^.*\(([^)]+)\).*');
 
-Future<void> extConsolidated() async {
-  final jsonString = File(consolidatedJson).readAsStringSync();
+Future<void> extractFromConsolidatedJson() async {
+  final jsonString = File(consolidatedJsonPath).readAsStringSync();
   final jsonObject = jsonDecode(jsonString) as Map<String, dynamic>;
   final jsonStringIndent = jsonEncoderIndent.convert(jsonObject);
-  final outSinkIndent = File(consolidatedJsonIndent).openWrite();
+  final outSinkIndent = File(consolidatedJsonIndentPath).openWrite();
   outSinkIndent.write(jsonStringIndent);
   await outSinkIndent.close();
   final results = jsonObject['results'] as List<dynamic>;
@@ -147,13 +248,13 @@ Future<void> extConsolidated() async {
     if (first) {
       first = false;
     } else {
-      outSinkJson.writeln(',');
+      id2BodyJsonOutSink.writeln(',');
     }
-    outSinkJson.write(rowJsonString);
+    id2BodyJsonOutSink.write(rowJsonString);
     if (row['name'] != null) {
       var name = row['name'] as String;
       name = name.replaceAll(rNewLine, ' ');
-      outSinkCsv
+      listCsvOutSink
         ..write(quoteCsvCell(normalize(name)))
         ..write(',')
         ..write(quoteCsvCell(id))
@@ -178,7 +279,7 @@ Future<void> extConsolidated() async {
         if (a == '') {
           continue;
         }
-        outSinkCsv
+        listCsvOutSink
           ..write(quoteCsvCell(normalize(a)))
           ..write(',')
           ..write(quoteCsvCell(id))
@@ -227,7 +328,7 @@ Object? surpressNullAndEmptyPropertiesFromJson(Object? json) {
   }
 }
 
-Future<void> fetchFul() async {
+Future<void> fetchFulExlsx() async {
   var client = HttpClient();
   String stringData;
   try {
@@ -237,10 +338,10 @@ Future<void> fetchFul() async {
   } finally {
     client.close();
   }
-  var htmlSink = File(fulHtml).openWrite();
+  var htmlSink = File(fulHtmlPath).openWrite();
   htmlSink.write(stringData);
   await htmlSink.close();
-  var fulHtmlSring = File(fulHtml).readAsStringSync();
+  var fulHtmlSring = File(fulHtmlPath).readAsStringSync();
   var dom = parse(fulHtmlSring);
   var elementFul = dom
       .getElementsByTagName('a')
@@ -257,7 +358,7 @@ Future<void> fetchFul() async {
   try {
     HttpClientRequest request = await client.getUrl(fulCsvUri);
     HttpClientResponse response = await request.close();
-    var outSink = File(fulXlsx).openWrite();
+    var outSink = File(fulXlsxPath).openWrite();
     await for (var chank in response) {
       outSink.add(chank);
     }
@@ -267,17 +368,36 @@ Future<void> fetchFul() async {
   }
 }
 
-Future<void> extFul() async {
-  Process.runSync('libreoffice', [
-    '--headless',
-    '--convert-to',
-    'csv:Text - txt - csv (StarCalc):44,34,76,,,,,,true',
-    fulXlsx,
-    '--outdir',
-    pls
-  ]);
+final doubleQuateRegExp = RegExp('"', multiLine: true, unicode: true);
+Future<void> extractFromFulExlsx() async {
+  var outSinkFulCsv = File(fulCsvPath).openWrite();
+  var excel = Excel.decodeBytes(File(fulXlsxPath).readAsBytesSync());
+  var rowIndex = 0;
+  for (final row in excel.sheets.values.first.rows) {
+    var columnIndex = 0;
+    for (final column in row) {
+      if (columnIndex == 0) {
+        if (rowIndex == 0) {
+          outSinkFulCsv.write('${column?.value ?? ''}');
+        } else {
+          outSinkFulCsv.write('$rowIndex');
+        }
+      } else {
+        var columnString = column?.value.toString() ?? '';
+        if (columnString != '') {
+          columnString = columnString.replaceAll(doubleQuateRegExp, '""');
+        }
+        outSinkFulCsv.write(',"$columnString"');
+      }
+      columnIndex++;
+    }
+    outSinkFulCsv.write('\n');
+    rowIndex++;
+  }
+  await outSinkFulCsv.flush();
+  await outSinkFulCsv.close();
   var ix = 0;
-  await for (var l in readCsvLines(fulCsv).skip(1)) {
+  await for (var l in readCsvLines(fulCsvPath).skip(1)) {
     ix++;
     var id = 'EUL$ix';
     var listCode = 'EUL';
@@ -295,14 +415,14 @@ Future<void> extFul() async {
     if (first) {
       first = false;
     } else {
-      outSinkJson.writeln(',');
+      id2BodyJsonOutSink.writeln(',');
     }
-    outSinkJson.write(rowJsonString);
+    id2BodyJsonOutSink.write(rowJsonString);
     var n = l[2]!;
     n = n.replaceAll(rCrConnector, ' ');
     n = n.trim();
     n = n.replaceFirstMapped(rTrailCamma, (match) => match.group(1)!);
-    outSinkCsv
+    listCsvOutSink
       ..write(quoteCsvCell(normalize(n)))
       ..write(',')
       ..write(quoteCsvCell(id))
@@ -323,7 +443,7 @@ Future<void> extFul() async {
       if (a == '') {
         continue;
       }
-      outSinkCsv
+      listCsvOutSink
         ..write(quoteCsvCell(normalize(a)))
         ..write(',')
         ..write(quoteCsvCell(id))
