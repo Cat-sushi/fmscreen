@@ -374,6 +374,9 @@ Future<void> extractFromFulExlsx() async {
   var excel = Excel.decodeBytes(File(fulXlsxPath).readAsBytesSync());
   var rowIndex = 0;
   for (final row in excel.sheets.values.first.rows) {
+    if (row[0]?.value == null) {
+      break;
+    }
     var columnIndex = 0;
     for (final column in row) {
       if (columnIndex == 0) {
@@ -383,11 +386,13 @@ Future<void> extractFromFulExlsx() async {
           outSinkFulCsv.write('$rowIndex');
         }
       } else {
-        var columnString = column?.value.toString() ?? '';
-        if (columnString != '') {
-          columnString = columnString.replaceAll(doubleQuateRegExp, '""');
+        var columnValue = column?.value;
+        if (columnValue == null) {
+          outSinkFulCsv.write(',');
+        } else {
+          var columnString = columnValue.toString().replaceAll(doubleQuateRegExp, '""');
+          outSinkFulCsv.write(',"$columnString"');
         }
-        outSinkFulCsv.write(',"$columnString"');
       }
       columnIndex++;
     }
