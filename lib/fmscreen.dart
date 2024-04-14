@@ -34,12 +34,11 @@ int _databaseVersion = 0;
 
 /// The screening engine.
 class Screener {
-  Screener({int cacheSize = 10000})
-      : _mutex = Mutex(),
-        _cacheSize = cacheSize;
+  Screener({this.cacheSize})
+      : _mutex = Mutex();
 
   final Mutex _mutex;
-  final int _cacheSize;
+  final int? cacheSize;
   final _entry2ItemIds = <Entry, List<ItemId>>{};
   final _itemId2ListCode = <ItemId, String>{};
   final _itemId2Body = <ItemId, Map<String, dynamic>>{};
@@ -87,7 +86,7 @@ class Screener {
     }
     var fmatcher = FMatcher();
     await fmatcher.init();
-    fmatcher.queryResultCacheSize = _cacheSize;
+    fmatcher.queryResultCacheSize = cacheSize ?? fmatcher.queryResultCacheSize;
     _fmatcherp = FMatcherP.fromFMatcher(fmatcher, serverCount: serverCount);
     await _fmatcherp.startServers();
     _databaseVersion = _fmatcherp.fmatcher.databaseVersion;

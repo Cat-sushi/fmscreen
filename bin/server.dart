@@ -30,7 +30,7 @@ import 'package:shelf_static/shelf_static.dart';
 import 'package:fmscreen/pdf.dart';
 
 late Screener screener;
-late int cacheSize;
+int? cacheSize;
 late int serverCount;
 int? port;
 
@@ -178,7 +178,7 @@ void main(List<String> args) async {
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('cache',
-        abbr: 'c', defaultsTo: '100000', help: 'result chache size')
+        abbr: 'c', help: 'result chache size')
     ..addOption('server',
         abbr: 's', defaultsTo: '0', help: 'number of server threads')
     ..addOption('port', abbr: 'p', valueHelp: 'port');
