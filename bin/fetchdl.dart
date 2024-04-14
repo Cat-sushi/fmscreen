@@ -17,6 +17,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:async/async.dart';
 import 'package:excel/excel.dart';
 import 'package:fmatch/fmatch.dart';
@@ -62,6 +63,25 @@ Future<void> main(List<String> args) async {
   Directory.current = File.fromUri(Platform.script).parent;
   Directory.current = '..';
 
+  var argParser = ArgParser()
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
+    ..addFlag('force', abbr: 'f', negatable: false, help: 'force rebuild db');
+  ArgResults options;
+  try {
+    options = argParser.parse(args);
+  } catch (e) {
+    print(argParser.usage);
+    exit(1);
+  }
+  if (options['help'] == true) {
+    print(argParser.usage);
+    exit(0);
+  }
+  var force = false;
+  if (options['force'] == true) {
+    force = true;
+  }
+
   final consolidatedJsonFile = File(consolidatedJsonPath);
   final fetching = !consolidatedJsonFile.existsSync() ||
       DateTime.now()
@@ -82,6 +102,8 @@ Future<void> main(List<String> args) async {
     await fetchFulExlsx();
     end = DateTime.now();
     print(end.difference(start).inMilliseconds);
+  } else if(!force) {
+    exit(1);
   }
 
   listCsvOutSink = File('$listCsvPath.new').openWrite()..add(utf8Bom);
@@ -122,6 +144,9 @@ Future<void> main(List<String> args) async {
   } else {
     File('$listCsvPath.new').deleteSync();
     File('$id2BodyJsonPath.new').deleteSync();
+    if(!force) {
+      exit(1);
+    }
   }
 
   try {
@@ -140,12 +165,14 @@ Future<void> main(List<String> args) async {
   if (!await fileDiff(dbPath, '$dbPath.old') &&
       !await fileDiff(idbPath, '$idbPath.old')) {
     try {
-      await File('$dbPath.old').delete();
+      File(dbPath).deleteSync();
+      File('$dbPath.old').renameSync(dbPath);
     } catch (e) {
       // do nothing;
     }
     try {
-      await File('$idbPath.old').delete();
+      File(idbPath).deleteSync();
+      File('$idbPath.old').renameSync(idbPath);
     } catch (e) {
       // do nothing;
     }
@@ -153,12 +180,12 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
   try {
-    await File('$dbPath.old').delete();
+    File('$dbPath.old').deleteSync();
   } catch (e) {
     // do nothing
   }
   try {
-    await File('$idbPath.old').delete();
+    File('$idbPath.old').deleteSync();
   } catch (e) {
     // do nothing
   }
@@ -225,13 +252,15 @@ Future<void> fetchConsolidatedJson() async {
 final regExpSource = RegExp(r'^.*\(([^)]+)\).*');
 
 Future<void> extractFromConsolidatedJson() async {
-  final jsonString = File(consolidatedJsonPath).readAsStringSync();
-  final jsonObject = jsonDecode(jsonString) as Map<String, dynamic>;
+  String? jsonString = File(consolidatedJsonPath).readAsStringSync();
+  Map<String, dynamic>? jsonObject = jsonDecode(jsonString) as Map<String, dynamic>;
+  jsonString = null;
   final jsonStringIndent = jsonEncoderIndent.convert(jsonObject);
   final outSinkIndent = File(consolidatedJsonIndentPath).openWrite();
   outSinkIndent.write(jsonStringIndent);
   await outSinkIndent.close();
   final results = jsonObject['results'] as List<dynamic>;
+  jsonObject = null;
   var ix = 0;
   for (var r in results) {
     ix++;
