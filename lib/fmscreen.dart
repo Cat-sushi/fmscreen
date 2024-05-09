@@ -34,11 +34,12 @@ int _databaseVersion = 0;
 
 /// The screening engine.
 class Screener {
-  Screener({this.cacheSize})
+  Screener({this.cacheSize, this.serverCount})
       : _mutex = Mutex();
 
   final Mutex _mutex;
   final int? cacheSize;
+  final int? serverCount;
   final _entry2ItemIds = <Entry, List<ItemId>>{};
   final _itemId2ListCode = <ItemId, String>{};
   final _itemId2Body = <ItemId, Map<String, dynamic>>{};
@@ -80,13 +81,12 @@ class Screener {
   /// Initialize this screener.
   ///
   /// Call and `await` this before use this screener.
-  Future<void> init({int serverCount = 0}) async {
+  Future<void> init() async {
     if (_started) {
       throw 'Bad Status';
     }
-    var fmatcher = FMatcher();
+    var fmatcher = FMatcher(cacheSize: cacheSize);
     await fmatcher.init();
-    fmatcher.queryResultCacheSize = cacheSize ?? fmatcher.queryResultCacheSize;
     _fmatcherp = FMatcherP.fromFMatcher(fmatcher, serverCount: serverCount);
     await _fmatcherp.startServers();
     _databaseVersion = _fmatcherp.fmatcher.databaseVersion;

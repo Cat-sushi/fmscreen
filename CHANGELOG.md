@@ -3,6 +3,7 @@
 ## 1.3.1
 
 - Make current directory agnostic.
+- Add serverCount to settings
 
 ## 1.3.0
 

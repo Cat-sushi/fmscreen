@@ -31,7 +31,7 @@ import 'package:fmscreen/pdf.dart';
 
 late Screener screener;
 int? cacheSize;
-late int serverCount;
+int? serverCount;
 int? port;
 
 // Configure routes.
@@ -164,7 +164,7 @@ Future<Response> _restartHandler(Request request) async {
   }
   print('Restarting servers');
   var newScreener = Screener(cacheSize: cacheSize);
-  await newScreener.init(serverCount: serverCount);
+  await newScreener.init();
   var oldScreener = screener;
   screener = newScreener;
   await oldScreener.stopServers();
@@ -177,10 +177,9 @@ void main(List<String> args) async {
 
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
-    ..addOption('cache',
-        abbr: 'c', help: 'result chache size')
+    ..addOption('cache', abbr: 'c', help: 'result chache size')
     ..addOption('server',
-        abbr: 's', defaultsTo: '0', help: 'number of server threads')
+        abbr: 's', help: 'number of server threads')
     ..addOption('port', abbr: 'p', valueHelp: 'port');
   ArgResults options;
   try {
@@ -195,15 +194,15 @@ void main(List<String> args) async {
   }
 
   if (options['cache'] != null) {
-    cacheSize = int.parse(options['cache'] as String);
+    cacheSize = int.tryParse(options['cache'] as String);
   }
 
   if (options['server'] != null) {
-    serverCount = int.parse(options['server'] as String);
+    serverCount = int.tryParse(options['server'] as String);
   }
 
   if (options['port'] != null) {
-    port = int.parse(options['port'] as String);
+    port = int.tryParse(options['port'] as String);
   }
 
   // Use any available host or container IP (usually `0.0.0.0`).
@@ -216,8 +215,8 @@ void main(List<String> args) async {
       .addMiddleware(logRequests())
       .addHandler(_handler);
 
-  screener = Screener(cacheSize: cacheSize);
-  await screener.init(serverCount: serverCount);
+  screener = Screener(cacheSize: cacheSize, serverCount: serverCount);
+  await screener.init();
 
   // For running in containers, we respect the PORT environment variable.
   port ??= int.parse(Platform.environment['PORT'] ?? '8080');
