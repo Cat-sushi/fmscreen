@@ -65,7 +65,8 @@ Future<void> main(List<String> args) async {
 
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
-    ..addFlag('force', abbr: 'f', negatable: false, help: 'force rebuild db');
+    ..addFlag('force', abbr: 'f', negatable: false, help: 'force rebuild db')
+    ..addFlag('hardForce', abbr: 'F', negatable: false, help: 'force fetching rebuild db');
   ArgResults options;
   try {
     options = argParser.parse(args);
@@ -81,6 +82,11 @@ Future<void> main(List<String> args) async {
   if (options['force'] == true) {
     force = true;
   }
+  var hardForce = false;
+  if (options['hardForce'] == true) {
+    force = true;
+    hardForce = true;
+  }
 
   final consolidatedJsonFile = File(consolidatedJsonPath);
   final fetching = !consolidatedJsonFile.existsSync() ||
@@ -91,7 +97,7 @@ Future<void> main(List<String> args) async {
 
   var start = DateTime.now();
   var end = start;
-  if (fetching) {
+  if (fetching || hardForce) {
     print("Fetching consolidated list.");
     await fetchConsolidatedJson();
     end = DateTime.now();

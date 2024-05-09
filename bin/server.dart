@@ -43,11 +43,6 @@ final _router = Router()
   ..get('/s/pdf', _pdfHandler)
   ..get('/s/restart', _restartHandler);
 
-final _clientHandler = createStaticHandler('assets/flutter/web',
-    defaultDocument: 'index.html', serveFilesOutsidePath: true);
-
-final _handler = Cascade().add(_router.call).add(_clientHandler).handler;
-
 Future<Response> _singleHandler(Request request) async {
   var q = request.requestedUri.queryParameters['q'];
   if (q == null) {
@@ -175,6 +170,11 @@ void main(List<String> args) async {
   Directory.current = File.fromUri(Platform.script).parent;
   Directory.current = '..';
 
+  final clientHandler = createStaticHandler('assets/flutter/web',
+      defaultDocument: 'index.html', serveFilesOutsidePath: true);
+
+  final handler0 = Cascade().add(_router.call).add(clientHandler).handler;
+
   var argParser = ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'print this help')
     ..addOption('cache', abbr: 'c', help: 'result chache size')
@@ -213,7 +213,7 @@ void main(List<String> args) async {
       .addMiddleware(gzipMiddleware)
       .addMiddleware(corsHeaders())
       .addMiddleware(logRequests())
-      .addHandler(_handler);
+      .addHandler(handler0);
 
   screener = Screener(cacheSize: cacheSize, serverCount: serverCount);
   await screener.init();
